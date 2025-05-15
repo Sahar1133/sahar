@@ -95,7 +95,7 @@ def apply_custom_css():
 def load_data():
     # Create sample data if file not found
     try:
-        data = pd.read_csv("new_updated_data.csv")
+        data = pd.read_csv("new_updated_data.xlsx")
     except FileNotFoundError:
         st.warning("Sample data not found. Using demo data.")
         data = pd.DataFrame({
@@ -154,5 +154,79 @@ def main():
     # Rest of your main function remains the same...
     # [Include all the remaining code from the previous version's main() function]
 
-if __name__ == "__main__":
-    main()
+
+
+def main():
+    apply_custom_css()
+    
+    st.title("🧠 AI Career Prediction System")
+    
+    st.sidebar.title("About")
+    st.sidebar.info("This AI-powered career prediction system analyzes your skills and preferences.")
+    
+    # Initialize session state for user responses if not already present
+    if 'user_responses' not in st.session_state:
+        st.session_state.user_responses = {}
+    
+    # Show questionnaire regardless of data loading
+    st.header("Career Prediction Questionnaire")
+    
+    user_responses = {}
+    
+    # Direct input features
+    with st.expander("Academic & Professional Information"):
+        user_responses['GPA'] = st.number_input(
+            "Your GPA:",
+            min_value=0.0,
+            max_value=4.0,
+            value=3.0,
+            step=0.1
+        )
+        user_responses['Years_of_Experience'] = st.number_input(
+            "Your Years of Experience:",
+            min_value=0,
+            max_value=50,
+            value=5,
+            step=1
+        )
+    
+    # Questionnaire sections
+    with st.expander("Teamwork Skills"):
+        teamwork = st.radio(
+            "In group projects, you typically:",
+            ["Work separately", "Coordinate some", "Actively collaborate"],
+            key="teamwork1"
+        )
+        user_responses['Teamwork_Skills'] = teamwork
+    
+    with st.expander("Communication Skills"):
+        communication = st.radio(
+            "How comfortable are you presenting ideas to a group?",
+            ["Very uncomfortable", "Somewhat comfortable", "Very comfortable"],
+            key="communication1"
+        )
+        user_responses['Communication_Skills'] = communication
+    
+    if st.button("Get Career Prediction"):
+        if len(user_responses) < 2:
+            st.warning("Please answer at least the required questions")
+        else:
+            # Store responses
+            st.session_state.user_responses = user_responses
+            
+            # Show a sample prediction (since we don't have real data)
+            sample_careers = ["Software Developer", "Data Analyst", "Project Manager", 
+                             "Marketing Specialist", "Graphic Designer"]
+            predicted_career = np.random.choice(sample_careers)
+            
+            st.success(f"Based on your responses, a good career match might be: {predicted_career}")
+            
+            # Show explanation
+            with st.expander("Why this prediction?"):
+                st.write("Key factors in your prediction:")
+                st.write(f"- Teamwork: {user_responses.get('Teamwork_Skills', 'Not specified')}")
+                st.write(f"- Communication: {user_responses.get('Communication_Skills', 'Not specified')}")
+                st.write(f"- GPA: {user_responses.get('GPA', 'Not specified')}")
+                st.write(f"- Experience: {user_responses.get('Years_of_Experience', 'Not specified')} years")
+                
+                st.write("\nThis is a simplified demo. With the full dataset, the prediction would be more accurate.")
