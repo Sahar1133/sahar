@@ -322,7 +322,7 @@ if st.button("🚀 Predict My Career"):
             # First encode all categorical responses
             le_dict = {}
             for col in data.select_dtypes(include=['object']).columns:
-                if col != 'Predicted_Career_Field':
+                if col != 'Predicted_Career':
                     le = LabelEncoder()
                     le.fit(data[col].astype(str))
                     le_dict[col] = le
