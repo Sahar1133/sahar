@@ -85,7 +85,7 @@ def apply_custom_css():
 def load_data():
     # If CSV not found, use demo data
     try:
-        data = pd.read_csv("new_updated_data.csv")
+        data = pd.read_csv("new_updated_data.xlsx")
     except FileNotFoundError:
         st.warning("⚠️ Dataset not found. Using demo data.")
         data = pd.DataFrame({
