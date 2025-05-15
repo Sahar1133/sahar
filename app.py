@@ -7,7 +7,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score
 
-
 # ====================== STYLING & SETUP ======================
 st.set_page_config(
     page_title="AI Career Predictor",
@@ -119,16 +118,25 @@ data = load_data()
 # ====================== MODEL TRAINING ======================
 def preprocess_data(data):
     le = LabelEncoder()
-    for col in data.select_dtypes(include=['object']).columns:
+    # Only encode columns that exist in the dataframe and are object type
+    object_cols = [col for col in data.select_dtypes(include=['object']).columns 
+                  if col in data.columns]
+    
+    for col in object_cols:
         if col != 'Predicted_Career_Field':
             data[col] = le.fit_transform(data[col].astype(str))
     
-    data['Predicted_Career_Field'] = le.fit_transform(data['Predicted_Career_Field'])
+    if 'Predicted_Career_Field' in data.columns:
+        data['Predicted_Career_Field'] = le.fit_transform(data['Predicted_Career_Field'])
     return data, le
 
 processed_data, target_le = preprocess_data(data.copy())
 
 def train_model(data):
+    if 'Predicted_Career_Field' not in data.columns:
+        st.error("Target column 'Predicted_Career_Field' not found in data")
+        return None, 0
+    
     X = data.drop('Predicted_Career_Field', axis=1)
     y = data['Predicted_Career_Field']
     
@@ -261,6 +269,7 @@ questions = {
         }
     ]
 }
+
 direct_input_features = {
     "GPA": {"type": "number", "min": 0.0, "max": 4.0, "step": 0.1, "default": 3.0},
     "Years_of_Experience": {"type": "number", "min": 0, "max": 50, "step": 1, "default": 5}
@@ -311,68 +320,61 @@ def main():
                     user_responses[feature].append(selected_value)
         
         # Prediction
-if st.button("🚀 Predict My Career"):
-    if len(user_responses) < 3:
-        st.warning("Please answer more questions for better accuracy.")
-    else:
-        with st.spinner("Analyzing your profile..."):
-            # Prepare input data
-            input_data = processed_data.drop('Predicted_Career_Field', axis=1).iloc[0:1].copy()
-            
-            # First encode all categorical responses
-            le_dict = {}
-            for col in data.select_dtypes(include=['object']).columns:
-                if col != 'Predicted_Career':
-                    le = LabelEncoder()
-                    le.fit(data[col].astype(str))
-                    le_dict[col] = le
-            
-            for col in input_data.columns:
-                if col in user_responses:
-                    if isinstance(user_responses[col], list):  # For question-based features
-                        if col in ['Communication_Skills', 'Leadership_Skills', 'Teamwork_Skills']:
-                            # Handle Low/Medium/High scale
-                            level_map = {"Low": 0, "Medium": 1, "High": 2}
-                            avg_level = np.mean([level_map[val] for val in user_responses[col]])
-                            input_data[col] = avg_level
+        if st.button("🚀 Predict My Career"):
+            if len(user_responses) < 3:
+                st.warning("Please answer more questions for better accuracy.")
+            else:
+                with st.spinner("Analyzing your profile..."):
+                    # Prepare input data
+                    input_data = processed_data.drop('Predicted_Career_Field', axis=1).iloc[0:1].copy()
+                    
+                    # Create label encoders for categorical features
+                    le_dict = {}
+                    for col in data.select_dtypes(include=['object']).columns:
+                        if col in data.columns and col != 'Predicted_Career_Field':
+                            le = LabelEncoder()
+                            le.fit(data[col].astype(str))
+                            le_dict[col] = le
+                    
+                    for col in input_data.columns:
+                        if col in user_responses:
+                            if isinstance(user_responses[col], list):  # For question-based features
+                                if col in ['Communication_Skills', 'Leadership_Skills', 'Teamwork_Skills']:
+                                    # Handle Low/Medium/High scale
+                                    level_map = {"Low": 0, "Medium": 1, "High": 2}
+                                    avg_level = np.mean([level_map[val] for val in user_responses[col]])
+                                    input_data[col] = avg_level
+                                else:
+                                    # For other categorical features, take the first response and encode it
+                                    if col in le_dict:
+                                        input_data[col] = le_dict[col].transform([user_responses[col][0]])[0]
+                            else:  # For direct inputs (numerical)
+                                input_data[col] = user_responses[col]
                         else:
-                            # For other categorical features, take the first response
-                            input_data[col] = le_dict[col].transform([user_responses[col][0]])[0]
-                    else:  # For direct inputs (numerical)
-                        input_data[col] = user_responses[col]
-                else:
-                    input_data[col] = processed_data[col].median()
-            
-            # Make prediction
-            prediction = model.predict(input_data)
-            predicted_career = target_le.inverse_transform(prediction)[0]
-            
-            # Explain prediction
-            st.success(f"🎯 **Recommended Career:** {predicted_career}")
-            
-            with st.expander("🔍 Why this recommendation?"):
-                st.write("The AI considered these key factors:")
-                
-                # Get feature importances
-                feat_importances = pd.Series(model.feature_importances_, index=input_data.columns)
-                top_features = feat_importances.sort_values(ascending=False).head(3)
-                
-                for feat in top_features.index:
-                    st.write(f"- **{feat.replace('_', ' ')}** (importance: {top_features[feat]:.2f})")
-                
-                st.write("\n**Sample Decision Path:**")
-                st.code(export_text(model, feature_names=list(input_data.columns)).split('\n')[0])
-                        st.write("The AI considered these key factors:")
+                            input_data[col] = processed_data[col].median()
+                    
+                    # Make prediction
+                    try:
+                        prediction = model.predict(input_data)
+                        predicted_career = target_le.inverse_transform(prediction)[0]
                         
-                        # Get feature importances
-                        feat_importances = pd.Series(model.feature_importances_, index=input_data.columns)
-                        top_features = feat_importances.sort_values(ascending=False).head(3)
+                        # Explain prediction
+                        st.success(f"🎯 **Recommended Career:** {predicted_career}")
                         
-                        for feat in top_features.index:
-                            st.write(f"- **{feat.replace('_', ' ')}** (importance: {top_features[feat]:.2f})")
-                        
-                        st.write("\n**Sample Decision Path:**")
-                        st.code(export_text(model, feature_names=list(input_data.columns)).split('\n')[0])
+                        with st.expander("🔍 Why this recommendation?"):
+                            st.write("The AI considered these key factors:")
+                            
+                            # Get feature importances
+                            feat_importances = pd.Series(model.feature_importances_, index=input_data.columns)
+                            top_features = feat_importances.sort_values(ascending=False).head(3)
+                            
+                            for feat in top_features.index:
+                                st.write(f"- **{feat.replace('_', ' ')}** (importance: {top_features[feat]:.2f})")
+                            
+                            st.write("\n**Sample Decision Path:**")
+                            st.code(export_text(model, feature_names=list(input_data.columns)).split('\n')[0])
+                    except Exception as e:
+                        st.error(f"An error occurred during prediction: {str(e)}")
     
     with tab2:
         st.header("📊 Dataset Insights")
