@@ -146,6 +146,102 @@ model, accuracy = train_model(processed_data)
 
 # ====================== QUESTIONNAIRE ======================
 questions = {
+    "Interest": [
+        {
+            "question": "Which of these subjects interests you most?",
+            "options": [
+                {"text": "Technology and Computers", "value": "Technology"},
+                {"text": "Business and Finance", "value": "Business"},
+                {"text": "Arts and Design", "value": "Arts"},
+                {"text": "Engineering and Construction", "value": "Engineering"},
+                {"text": "Healthcare and Medicine", "value": "Medical"}
+            ]
+        },
+        {
+            "question": "In your free time, you prefer to:",
+            "options": [
+                {"text": "Learn new tech skills", "value": "Technology"},
+                {"text": "Read business news", "value": "Business"},
+                {"text": "Create art or design", "value": "Arts"},
+                {"text": "Build or fix things", "value": "Engineering"},
+                {"text": "Help others with health advice", "value": "Medical"}
+            ]
+        }
+    ],
+    "Work_Style": [
+        {
+            "question": "Your ideal work environment is:",
+            "options": [
+                {"text": "Working alone with clear tasks", "value": "Independent"},
+                {"text": "Working closely with a team", "value": "Collaborative"},
+                {"text": "A mix of both with flexibility", "value": "Flexible"}
+            ]
+        },
+        {
+            "question": "When facing a complex problem, you:",
+            "options": [
+                {"text": "Prefer to solve it yourself", "value": "Independent"},
+                {"text": "Brainstorm with colleagues", "value": "Collaborative"},
+                {"text": "Depends on the situation", "value": "Flexible"}
+            ]
+        }
+    ],
+    "Strengths": [
+        {
+            "question": "Your strongest skill is:",
+            "options": [
+                {"text": "Analyzing data and patterns", "value": "Analytical"},
+                {"text": "Coming up with new ideas", "value": "Creative"},
+                {"text": "Planning long-term strategies", "value": "Strategic"},
+                {"text": "Hands-on problem solving", "value": "Practical"}
+            ]
+        },
+        {
+            "question": "You're particularly good at:",
+            "options": [
+                {"text": "Math and logical reasoning", "value": "Analytical"},
+                {"text": "Artistic expression", "value": "Creative"},
+                {"text": "Seeing the big picture", "value": "Strategic"},
+                {"text": "Building physical solutions", "value": "Practical"}
+            ]
+        }
+    ],
+    "Communication_Skills": [
+        {
+            "question": "How comfortable are you presenting ideas?",
+            "options": [
+                {"text": "Very uncomfortable", "value": "Low"},
+                {"text": "Somewhat comfortable", "value": "Medium"},
+                {"text": "Very comfortable", "value": "High"}
+            ]
+        },
+        {
+            "question": "In meetings, you typically:",
+            "options": [
+                {"text": "Rarely speak up", "value": "Low"},
+                {"text": "Contribute when asked", "value": "Medium"},
+                {"text": "Frequently share ideas", "value": "High"}
+            ]
+        }
+    ],
+    "Leadership_Skills": [
+        {
+            "question": "When assigned to lead a project, you:",
+            "options": [
+                {"text": "Feel anxious about the responsibility", "value": "Low"},
+                {"text": "Manage but prefer not to lead", "value": "Medium"},
+                {"text": "Feel confident in your ability", "value": "High"}
+            ]
+        },
+        {
+            "question": "Your leadership style is:",
+            "options": [
+                {"text": "Avoid leadership roles", "value": "Low"},
+                {"text": "Lead when necessary", "value": "Medium"},
+                {"text": "Naturally take charge", "value": "High"}
+            ]
+        }
+    ],
     "Teamwork_Skills": [
         {
             "question": "In group projects, you typically:",
@@ -163,19 +259,8 @@ questions = {
                 {"text": "Proactively offer assistance", "value": "High"}
             ]
         }
-    ],
-    "Communication_Skills": [
-        {
-            "question": "How comfortable are you presenting ideas?",
-            "options": [
-                {"text": "Very uncomfortable", "value": "Low"},
-                {"text": "Somewhat comfortable", "value": "Medium"},
-                {"text": "Very comfortable", "value": "High"}
-            ]
-        }
     ]
 }
-
 direct_input_features = {
     "GPA": {"type": "number", "min": 0.0, "max": 4.0, "step": 0.1, "default": 3.0},
     "Years_of_Experience": {"type": "number", "min": 0, "max": 50, "step": 1, "default": 5}
