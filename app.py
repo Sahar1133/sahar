@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import streamlit as st
-from sklearn.tree import DecisionTreeClassifier, export_text
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score
@@ -10,8 +10,8 @@ import random
 
 # ====================== STYLING & SETUP ======================
 st.set_page_config(
-    page_title="Career Path Finder",
-    page_icon="🧭",
+    page_title="Career Match Pro",
+    page_icon="💼",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -19,431 +19,161 @@ st.set_page_config(
 def apply_custom_css():
     st.markdown("""
     <style>
-    /* Main background */
     .stApp {
-        background-color: #f8f9fa;
+        background-color: #f5f7fa;
     }
-    
-    /* Button styling */
     .stButton>button {
-        background: linear-gradient(135deg, #6e8efb, #4a6cf7);
+        background: linear-gradient(135deg, #667eea, #764ba2);
         color: white;
         border: none;
         border-radius: 8px;
-        padding: 10px 24px;
+        padding: 12px 28px;
         font-size: 16px;
-        transition: all 0.3s;
     }
-    .stButton>button:hover {
-        transform: scale(1.02);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    
-    /* Input fields */
-    .stTextInput>div>div>input,
-    .stNumberInput>div>div>input {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 10px;
-    }
-    
-    /* Radio buttons */
-    .stRadio>div {
-        flex-direction: column;
-        gap: 8px;
-    }
-    .stRadio>div>label {
-        background: #f1f3ff;
-        padding: 12px;
-        border-radius: 8px;
-        transition: all 0.2s;
-    }
-    .stRadio>div>label:hover {
-        background: #e0e5ff;
-    }
-    
-    /* Headers */
     h1 {
         color: #2c3e50;
-        border-bottom: 2px solid #4a6cf7;
-        padding-bottom: 10px;
+        border-bottom: 3px solid #667eea;
+        padding-bottom: 12px;
     }
-    h2 {
-        color: #3498db;
-    }
-    
-    /* Expanders */
-    .stExpander {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    .result-box {
+        background: linear-gradient(135deg, #f5f7fa, #e4e8f0);
+        border-radius: 12px;
+        padding: 25px;
+        margin: 20px 0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     </style>
     """, unsafe_allow_html=True)
 
-# ====================== DATA LOADING & PREPROCESSING ======================
+# ====================== DATA & MODEL ======================
 @st.cache_data
 def load_data():
-    # Expanded career options
     career_options = [
-        'Software Developer', 'Data Scientist', 'AI Engineer', 
-        'Cybersecurity Specialist', 'Cloud Architect',
-        'Marketing Manager', 'Financial Analyst', 'HR Manager',
-        'Entrepreneur', 'Investment Banker',
-        'Graphic Designer', 'Video Editor', 'Music Producer',
-        'Creative Writer', 'Art Director',
-        'Mechanical Engineer', 'Electrical Engineer', 
-        'Civil Engineer', 'Robotics Engineer',
-        'Doctor', 'Nurse', 'Psychologist', 
-        'Physical Therapist', 'Medical Researcher',
-        'Biotechnologist', 'Research Scientist', 
-        'Environmental Scientist', 'Physicist',
-        'Teacher', 'Professor', 'Educational Consultant',
-        'Curriculum Developer',
-        'Lawyer', 'Judge', 'Legal Consultant',
-        'UX Designer', 'Product Manager',
-        'Journalist', 'Public Relations Specialist',
-        'Architect', 'Urban Planner',
-        'Chef', 'Event Planner', 'Fashion Designer'
+        'AI Engineer', 'Data Scientist', 'Cybersecurity Specialist',
+        'UX Designer', 'Financial Analyst', 'Marketing Director',
+        'Biomedical Researcher', 'Robotics Engineer', 'Game Developer',
+        'Environmental Consultant', 'Corporate Lawyer', 'Clinical Psychologist'
     ]
     
     try:
-        data = pd.read_excel("new_updated_data.xlsx")
-        # Ensure we have enough career variety
-        if len(data['Predicted_Career_Field'].unique()) < 20:
-            data['Predicted_Career_Field'] = np.random.choice(career_options, size=len(data))
-    except FileNotFoundError:
-        st.warning("⚠️ Dataset not found. Using demo data.")
+        data = pd.read_excel("career_data.xlsx")
+    except:
         data = pd.DataFrame({
-            'Interest': np.random.choice(['Technology', 'Business', 'Arts', 'Engineering', 'Medical', 'Science', 'Education', 'Law'], 200),
-            'Work_Style': np.random.choice(['Independent', 'Collaborative', 'Flexible'], 200),
-            'Strengths': np.random.choice(['Analytical', 'Creative', 'Strategic', 'Practical'], 200),
-            'Communication_Skills': np.random.choice(['Low', 'Medium', 'High'], 200),
-            'Leadership_Skills': np.random.choice(['Low', 'Medium', 'High'], 200),
-            'Teamwork_Skills': np.random.choice(['Low', 'Medium', 'High'], 200),
-            'GPA': np.round(np.random.uniform(2.0, 4.0, 200), 1),
-            'Years_of_Experience': np.random.randint(0, 20, 200),
-            'Predicted_Career_Field': np.random.choice(career_options, 200)
+            'Interest': np.random.choice(['Tech', 'Business', 'Science', 'Creative'], 200),
+            'Skills': np.random.choice(['Analytical', 'Creative', 'Technical', 'Social'], 200),
+            'Work_Preference': np.random.choice(['Team', 'Solo', 'Flexible'], 200),
+            'Experience_Level': np.random.randint(0, 5, 200),
+            'Education': np.random.choice(['High School', 'Bachelor', 'Master', 'PhD'], 200),
+            'Career': np.random.choice(career_options, 200)
         })
-    
-    # Clean data
-    if 'GPA' in data.columns:
-        data['GPA'] = pd.to_numeric(data['GPA'], errors='coerce')
-        data['GPA'].fillna(data['GPA'].median(), inplace=True)
-    
     return data
 
-data = load_data()
-
-# ====================== MODEL TRAINING ======================
-def preprocess_data(data):
-    le = LabelEncoder()
-    object_cols = [col for col in data.select_dtypes(include=['object']).columns 
-                  if col in data.columns]
-    
-    for col in object_cols:
-        if col != 'Predicted_Career_Field':
-            data[col] = le.fit_transform(data[col].astype(str))
-    
-    if 'Predicted_Career_Field' in data.columns:
-        data['Predicted_Career_Field'] = le.fit_transform(data['Predicted_Career_Field'])
-    return data, le
-
-processed_data, target_le = preprocess_data(data.copy())
-
 def train_model(data):
-    if 'Predicted_Career_Field' not in data.columns:
-        st.error("Target column not found in data")
-        return None, 0
+    processed_data = data.copy()
+    le = LabelEncoder()
     
-    X = data.drop('Predicted_Career_Field', axis=1)
-    y = data['Predicted_Career_Field']
+    for col in ['Interest', 'Skills', 'Work_Preference', 'Education', 'Career']:
+        processed_data[col] = le.fit_transform(processed_data[col])
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X = processed_data.drop('Career', axis=1)
+    y = processed_data['Career']
     
-    model = DecisionTreeClassifier(criterion='entropy', max_depth=5, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    model = DecisionTreeClassifier(criterion='entropy', max_depth=4)
     model.fit(X_train, y_train)
     
-    y_pred = model.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    
-    return model, accuracy
+    return model, le, accuracy_score(y_test, model.predict(X_test))
 
-model, accuracy = train_model(processed_data)
+data = load_data()
+model, label_encoder, accuracy = train_model(data)
 
 # ====================== QUESTIONNAIRE ======================
-def get_randomized_questions():
-    # Pool of all possible questions
-    all_questions = [
-        # Interest questions
+def get_questions():
+    return [
         {
-            "question": "Which of these activities excites you most?",
+            "text": "What type of projects excite you most?",
             "options": [
-                {"text": "Coding or working with technology", "value": "Technology"},
-                {"text": "Analyzing market trends", "value": "Business"},
-                {"text": "Creating art or designs", "value": "Arts"},
-                {"text": "Building or fixing mechanical things", "value": "Engineering"},
-                {"text": "Helping people with health issues", "value": "Medical"},
-                {"text": "Conducting experiments", "value": "Science"},
-                {"text": "Teaching others", "value": "Education"},
-                {"text": "Debating or solving legal problems", "value": "Law"}
+                "Building tech solutions",
+                "Analyzing financial data",
+                "Scientific research",
+                "Creative design work"
             ],
             "feature": "Interest"
         },
         {
-            "question": "What type of books/movies do you enjoy most?",
+            "text": "Your strongest ability is:",
             "options": [
-                {"text": "Sci-fi and technology", "value": "Technology"},
-                {"text": "Business success stories", "value": "Business"},
-                {"text": "Creative arts and design", "value": "Arts"},
-                {"text": "How things work", "value": "Engineering"},
-                {"text": "Medical dramas", "value": "Medical"},
-                {"text": "Scientific discoveries", "value": "Science"},
-                {"text": "Educational content", "value": "Education"},
-                {"text": "Courtroom dramas", "value": "Law"}
+                "Problem-solving",
+                "Innovation",
+                "Technical skills",
+                "People skills"
             ],
-            "feature": "Interest"
-        },
-        
-        # Work style questions
-        {
-            "question": "How do you prefer to work?",
-            "options": [
-                {"text": "Alone with clear tasks", "value": "Independent"},
-                {"text": "In a team environment", "value": "Collaborative"},
-                {"text": "A flexible mix of both", "value": "Flexible"}
-            ],
-            "feature": "Work_Style"
+            "feature": "Skills"
         },
         {
-            "question": "Your ideal project would involve:",
+            "text": "Preferred work style:",
             "options": [
-                {"text": "Working independently on your part", "value": "Independent"},
-                {"text": "Constant collaboration with others", "value": "Collaborative"},
-                {"text": "Some teamwork with independent phases", "value": "Flexible"}
+                "Collaborative team",
+                "Independent work",
+                "Mix of both"
             ],
-            "feature": "Work_Style"
-        },
-        
-        # Strengths questions
-        {
-            "question": "What comes most naturally to you?",
-            "options": [
-                {"text": "Solving complex problems", "value": "Analytical"},
-                {"text": "Coming up with creative ideas", "value": "Creative"},
-                {"text": "Planning long-term strategies", "value": "Strategic"},
-                {"text": "Building practical solutions", "value": "Practical"}
-            ],
-            "feature": "Strengths"
-        },
-        {
-            "question": "Others would describe you as:",
-            "options": [
-                {"text": "Logical and detail-oriented", "value": "Analytical"},
-                {"text": "Imaginative and original", "value": "Creative"},
-                {"text": "Visionary and forward-thinking", "value": "Strategic"},
-                {"text": "Hands-on and resourceful", "value": "Practical"}
-            ],
-            "feature": "Strengths"
-        },
-        
-        # Communication questions
-        {
-            "question": "In social situations, you:",
-            "options": [
-                {"text": "Prefer listening to speaking", "value": "Low"},
-                {"text": "Speak when you have something to say", "value": "Medium"},
-                {"text": "Easily engage in conversations", "value": "High"}
-            ],
-            "feature": "Communication_Skills"
-        },
-        {
-            "question": "When explaining something complex, you:",
-            "options": [
-                {"text": "Struggle to put it in simple terms", "value": "Low"},
-                {"text": "Can explain if you prepare", "value": "Medium"},
-                {"text": "Naturally simplify complex ideas", "value": "High"}
-            ],
-            "feature": "Communication_Skills"
-        },
-        
-        # Leadership questions
-        {
-            "question": "When a group needs direction, you:",
-            "options": [
-                {"text": "Wait for someone else to step up", "value": "Low"},
-                {"text": "Help if no one else does", "value": "Medium"},
-                {"text": "Naturally take the lead", "value": "High"}
-            ],
-            "feature": "Leadership_Skills"
-        },
-        {
-            "question": "Your approach to responsibility is:",
-            "options": [
-                {"text": "Avoid taking charge", "value": "Low"},
-                {"text": "Take charge when needed", "value": "Medium"},
-                {"text": "Seek leadership roles", "value": "High"}
-            ],
-            "feature": "Leadership_Skills"
-        },
-        
-        # Teamwork questions
-        {
-            "question": "In group settings, you usually:",
-            "options": [
-                {"text": "Focus on your individual tasks", "value": "Low"},
-                {"text": "Coordinate when necessary", "value": "Medium"},
-                {"text": "Actively collaborate with others", "value": "High"}
-            ],
-            "feature": "Teamwork_Skills"
-        },
-        {
-            "question": "When a teammate needs help, you:",
-            "options": [
-                {"text": "Let them figure it out", "value": "Low"},
-                {"text": "Help if they ask", "value": "Medium"},
-                {"text": "Proactively offer assistance", "value": "High"}
-            ],
-            "feature": "Teamwork_Skills"
+            "feature": "Work_Preference"
         }
     ]
-    
-    # Select 10 random questions (at least 1 from each category)
-    feature_categories = list(set([q['feature'] for q in all_questions]))
-    selected_questions = []
-    
-    # First ensure we have at least one question from each category
-    for feature in feature_categories:
-        feature_questions = [q for q in all_questions if q['feature'] == feature]
-        selected_questions.append(random.choice(feature_questions))
-    
-    # Then fill the rest randomly
-    remaining_questions = [q for q in all_questions if q not in selected_questions]
-    selected_questions.extend(random.sample(remaining_questions, min(10 - len(selected_questions), len(remaining_questions))))
-    
-    # Shuffle the final selection
-    random.shuffle(selected_questions)
-    return selected_questions
 
-direct_input_features = {
-    "GPA": {"question": "What is your approximate GPA (0.0-4.0)?", "type": "number", "min": 0.0, "max": 4.0, "step": 0.1, "default": 3.0},
-    "Years_of_Experience": {"question": "Years of professional experience (if any):", "type": "number", "min": 0, "max": 50, "step": 1, "default": 0}
-}
-
-# ====================== STREAMLIT APP ======================
+# ====================== MAIN APP ======================
 def main():
     apply_custom_css()
+    st.title("💼 Career Match Pro")
+    st.write("Discover your perfect career in just 3 questions!")
     
-    st.title("🧭 Career Path Finder")
-    st.markdown("Discover careers that match your unique strengths and preferences.")
-    
-    # Sidebar
-    st.sidebar.title("About This Tool")
-    st.sidebar.info("This assessment helps match your profile with suitable career options.")
-    st.sidebar.write(f"*Based on analysis of {len(data)} career paths*")
-    
-    # Tabs
-    tab1, tab2 = st.tabs(["Take Assessment", "Career Insights"])
-    
-    with tab1:
-        st.header("Career Compatibility Assessment")
-        st.write("Answer these questions to discover careers that fit your profile.")
-        
-        user_responses = {}
-        
-        # Direct inputs (GPA, Experience)
-        with st.expander("Your Background"):
-            for feature, config in direct_input_features.items():
-                user_responses[feature] = st.number_input(
-                    config["question"],
-                    min_value=config["min"],
-                    max_value=config["max"],
-                    value=config["default"],
-                    step=config["step"]
-                )
-        
-        # Randomized questions
-        st.subheader("About You")
-        questions = get_randomized_questions()
-        for i, q in enumerate(questions):
-            selected_option = st.radio(
-                q["question"],
-                [opt["text"] for opt in q["options"]],
-                key=f"q_{i}"
-            )
-            selected_value = q["options"][[opt["text"] for opt in q["options"]].index(selected_option)]["value"]
-            if q["feature"] not in user_responses:
-                user_responses[q["feature"]] = []
-            user_responses[q["feature"]].append(selected_value)
-        
-       # ====================== PREDICTION SECTION (simplified) ======================
-if st.button("🔮 Find My Career Match"):
-    if len(user_responses) < 3:
-        st.warning("Please answer more questions for better results.")
-    else:
-        with st.spinner("Discovering your ideal career..."):
-            # ... [data preparation remains same] ...
-            
-            # Get SINGLE prediction
-            prediction = model.predict(input_data)
-            predicted_career = target_le.inverse_transform(prediction)[0]
-            
-            # Display only the top match
-            st.success(f"## 🎯 Your Best Career Match: **{predicted_career}**")
-            
-            # Feature importance explanation (simplified)
-            with st.expander("Why this match?"):
-                st.write("This career aligns best with your:")
-                
-                # Get top 1 most important feature
-                feat_importance = pd.Series(model.feature_importances_, 
-                                         index=input_data.columns)
-                top_feature = feat_importance.idxmax()
-                top_value = user_responses.get(top_feature, ["your responses"])[0]
-                
-                # Human-readable explanations
-                explanations = {
-                    "Interest": f"passion for **{top_value}**-related work",
-                    "Work_Style": f"preference for **{top_value.lower()}** environments",
-                    "Strengths": f"**{top_value.lower()}** abilities",
-                    "GPA": f"academic performance (GPA: {user_responses.get('GPA', 3.0)})",
-                    "Years_of_Experience": f"experience level ({user_responses.get('Years_of_Experience', 0)} years)"
-                }
-                
-                st.write(f"- {explanations.get(top_feature, 'unique profile characteristics')}")
-    
-    with tab2:
-        st.header("📊 Career Insights")
-        st.write("Explore different career paths and their characteristics.")
-        
-        if st.checkbox("Show Career Options"):
-            st.dataframe(data['Predicted_Career_Field'].value_counts().reset_index().rename(
-                columns={'index': 'Career', 'Predicted_Career_Field': 'Frequency'}))
-        
-        st.subheader("Popular Career Paths")
-        fig, ax = plt.subplots(figsize=(10, 6))
-        data['Predicted_Career_Field'].value_counts().head(15).plot(kind='barh', ax=ax, color='skyblue')
-        ax.set_title("Most Common Career Paths")
-        ax.set_xlabel("Frequency")
-        st.pyplot(fig)
-        
-        st.subheader("Career Characteristics")
-        selected_career = st.selectbox(
-            "Select a career to learn more:",
-            sorted(data['Predicted_Career_Field'].unique())
+    # Questions
+    responses = {}
+    for i, q in enumerate(get_questions()):
+        responses[q["feature"]] = st.radio(
+            f"{i+1}. {q['text']}",
+            q["options"],
+            key=q["feature"]
         )
-        
-        career_data = data[data['Predicted_Career_Field'] == selected_career].mean(numeric_only=True)
-        
-        if not career_data.empty:
-            st.write(f"**Typical profile for {selected_career}:**")
-            cols = st.columns(3)
-            with cols[0]:
-                st.metric("Average GPA", f"{career_data.get('GPA', 0):.1f}")
-            with cols[1]:
-                st.metric("Avg. Experience", f"{career_data.get('Years_of_Experience', 0):.1f} years")
-            with cols[2]:
-                st.metric("Common Interest", data[data['Predicted_Career_Field'] == selected_career]['Interest'].mode()[0])
+    
+    # Additional info
+    with st.expander("+ Additional Information"):
+        responses["Experience_Level"] = st.slider(
+            "Years of relevant experience:", 0, 20, 2)
+        responses["Education"] = st.selectbox(
+            "Highest education level:",
+            ["High School", "Bachelor", "Master", "PhD"])
+    
+    # Prediction
+    if st.button("🚀 Find My Career", type="primary"):
+        with st.spinner("Analyzing your unique profile..."):
+            # Prepare input
+            input_data = pd.DataFrame([responses])
+            for col in ['Interest', 'Skills', 'Work_Preference', 'Education']:
+                input_data[col] = label_encoder.transform(input_data[col])
+            
+            # Predict
+            prediction = model.predict(input_data)[0]
+            career = label_encoder.inverse_transform([prediction])[0]
+            
+            # Display single result
+            st.markdown(f"""
+            <div class='result-box'>
+                <h2 style='color:#667eea;'>Your Perfect Career Match:</h2>
+                <h1 style='text-align:center; margin:20px 0;'>{career}</h1>
+                <p>Based on your profile and our analysis of {len(data)} career paths</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Simple explanation
+            feat_importance = pd.Series(
+                model.feature_importances_,
+                index=input_data.columns
+            ).sort_values(ascending=False)
+            
+            st.write("**Key factors in this match:**")
+            for feat in feat_importance.index[:2]:
+                st.write(f"- Your **{feat.replace('_', ' ').lower()}** ({responses[feat]})")
 
 if __name__ == "__main__":
     main()
