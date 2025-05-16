@@ -80,6 +80,20 @@ def apply_custom_css():
     }
     </style>
     """, unsafe_allow_html=True)
+    # Add this at the beginning of your main() function, right after applying custom CSS
+if 'questions' not in st.session_state:
+    st.session_state.questions = get_randomized_questions()
+
+# Then modify the questionnaire section to use st.session_state.questions
+st.subheader("About You")
+for i, q in enumerate(st.session_state.questions):
+    selected_option = st.radio(
+        q["question"],
+        [opt["text"] for opt in q["options"]],
+        key=f"q_{i}"
+    )
+    selected_value = q["options"][[opt["text"] for opt in q["options"]].index(selected_option)]["value"]
+    st.session_state.user_responses[q["feature"]] = selected_value
 
 # ====================== DATA LOADING & PREPROCESSING ======================
 @st.cache_data
