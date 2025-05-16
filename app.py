@@ -366,7 +366,7 @@ def main():
     
     with tab1:
         st.header("Career Compatibility Assessment")
-        st.write("Answer these 15 questions to discover careers that fit your profile.")
+        st.write("Answer these questions to discover careers that fit your profile.")
         
         with st.expander("Your Background"):
             for feature, config in direct_input_features.items():
