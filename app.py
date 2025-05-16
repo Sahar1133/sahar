@@ -170,8 +170,9 @@ model, accuracy = train_model(processed_data)
 
 # ====================== QUESTIONNAIRE ======================
 def get_all_questions():
-    """Returns the full pool of 20 questions"""
+    """Returns a pool of 30 questions"""
     return [
+        # Interest Questions (1-8)
         {
             "question": "1. Which of these activities excites you most?",
             "options": [
@@ -186,7 +187,303 @@ def get_all_questions():
             ],
             "feature": "Interest"
         },
-        # ... (keep all other questions the same)
+        {
+            "question": "2. What type of books/movies do you enjoy most?",
+            "options": [
+                {"text": "Sci-fi and technology", "value": "Technology"},
+                {"text": "Business success stories", "value": "Business"},
+                {"text": "Creative arts and design", "value": "Arts"},
+                {"text": "How things work", "value": "Engineering"},
+                {"text": "Medical dramas", "value": "Medical"},
+                {"text": "Scientific discoveries", "value": "Science"},
+                {"text": "Educational content", "value": "Education"},
+                {"text": "Courtroom dramas", "value": "Law"}
+            ],
+            "feature": "Interest"
+        },
+        {
+            "question": "3. Which subject did you enjoy most in school?",
+            "options": [
+                {"text": "Computer Science", "value": "Technology"},
+                {"text": "Economics/Business", "value": "Business"},
+                {"text": "Art/Music", "value": "Arts"},
+                {"text": "Physics/Engineering", "value": "Engineering"},
+                {"text": "Biology/Medicine", "value": "Medical"},
+                {"text": "Chemistry/Physics", "value": "Science"},
+                {"text": "Education/Psychology", "value": "Education"},
+                {"text": "Government/Law", "value": "Law"}
+            ],
+            "feature": "Interest"
+        },
+        {
+            "question": "4. What type of projects do you enjoy most?",
+            "options": [
+                {"text": "Developing software/apps", "value": "Technology"},
+                {"text": "Creating business plans", "value": "Business"},
+                {"text": "Designing visuals/artwork", "value": "Arts"},
+                {"text": "Building physical prototypes", "value": "Engineering"},
+                {"text": "Helping people directly", "value": "Medical"},
+                {"text": "Research experiments", "value": "Science"},
+                {"text": "Teaching/mentoring", "value": "Education"},
+                {"text": "Analyzing legal cases", "value": "Law"}
+            ],
+            "feature": "Interest"
+        },
+
+        # Work Style Questions (5-8)
+        {
+            "question": "5. How do you prefer to work?",
+            "options": [
+                {"text": "Alone with clear tasks", "value": "Independent"},
+                {"text": "In a team environment", "value": "Collaborative"},
+                {"text": "A flexible mix of both", "value": "Flexible"}
+            ],
+            "feature": "Work_Style"
+        },
+        {
+            "question": "6. Your ideal project would involve:",
+            "options": [
+                {"text": "Working independently on your part", "value": "Independent"},
+                {"text": "Constant collaboration with others", "value": "Collaborative"},
+                {"text": "Some teamwork with independent phases", "value": "Flexible"}
+            ],
+            "feature": "Work_Style"
+        },
+        {
+            "question": "7. When facing a difficult problem, you:",
+            "options": [
+                {"text": "Prefer to solve it yourself", "value": "Independent"},
+                {"text": "Ask colleagues for input", "value": "Collaborative"},
+                {"text": "Try yourself first, then ask for help", "value": "Flexible"}
+            ],
+            "feature": "Work_Style"
+        },
+        {
+            "question": "8. Your ideal work schedule would be:",
+            "options": [
+                {"text": "Strict 9-5 with clear boundaries", "value": "Independent"},
+                {"text": "Flexible hours with team coordination", "value": "Collaborative"},
+                {"text": "Mix of structured and flexible time", "value": "Flexible"}
+            ],
+            "feature": "Work_Style"
+        },
+
+        # Strengths Questions (9-12)
+        {
+            "question": "9. What comes most naturally to you?",
+            "options": [
+                {"text": "Solving complex problems", "value": "Analytical"},
+                {"text": "Coming up with creative ideas", "value": "Creative"},
+                {"text": "Planning long-term strategies", "value": "Strategic"},
+                {"text": "Building practical solutions", "value": "Practical"}
+            ],
+            "feature": "Strengths"
+        },
+        {
+            "question": "10. Others would describe you as:",
+            "options": [
+                {"text": "Logical and detail-oriented", "value": "Analytical"},
+                {"text": "Imaginative and original", "value": "Creative"},
+                {"text": "Visionary and forward-thinking", "value": "Strategic"},
+                {"text": "Hands-on and resourceful", "value": "Practical"}
+            ],
+            "feature": "Strengths"
+        },
+        {
+            "question": "11. Your strongest skill is:",
+            "options": [
+                {"text": "Data analysis", "value": "Analytical"},
+                {"text": "Creative thinking", "value": "Creative"},
+                {"text": "Long-term planning", "value": "Strategic"},
+                {"text": "Practical implementation", "value": "Practical"}
+            ],
+            "feature": "Strengths"
+        },
+        {
+            "question": "12. In school projects, you typically:",
+            "options": [
+                {"text": "Handled the data/analysis parts", "value": "Analytical"},
+                {"text": "Came up with creative concepts", "value": "Creative"},
+                {"text": "Organized the overall strategy", "value": "Strategic"},
+                {"text": "Built the practical deliverables", "value": "Practical"}
+            ],
+            "feature": "Strengths"
+        },
+
+        # Communication Skills (13-16)
+        {
+            "question": "13. In social situations, you:",
+            "options": [
+                {"text": "Prefer listening to speaking", "value": "Low"},
+                {"text": "Speak when you have something to say", "value": "Medium"},
+                {"text": "Easily engage in conversations", "value": "High"}
+            ],
+            "feature": "Communication_Skills"
+        },
+        {
+            "question": "14. When explaining something complex, you:",
+            "options": [
+                {"text": "Struggle to put it in simple terms", "value": "Low"},
+                {"text": "Can explain if you prepare", "value": "Medium"},
+                {"text": "Naturally simplify complex ideas", "value": "High"}
+            ],
+            "feature": "Communication_Skills"
+        },
+        {
+            "question": "15. In group presentations, you typically:",
+            "options": [
+                {"text": "Handle the background research", "value": "Low"},
+                {"text": "Present your specific part", "value": "Medium"},
+                {"text": "Take the lead in presenting", "value": "High"}
+            ],
+            "feature": "Communication_Skills"
+        },
+        {
+            "question": "16. When networking professionally, you:",
+            "options": [
+                {"text": "Find it challenging", "value": "Low"},
+                {"text": "Can do it when necessary", "value": "Medium"},
+                {"text": "Enjoy meeting new people", "value": "High"}
+            ],
+            "feature": "Communication_Skills"
+        },
+
+        # Leadership Skills (17-20)
+        {
+            "question": "17. When a group needs direction, you:",
+            "options": [
+                {"text": "Wait for someone else to step up", "value": "Low"},
+                {"text": "Help if no one else does", "value": "Medium"},
+                {"text": "Naturally take the lead", "value": "High"}
+            ],
+            "feature": "Leadership_Skills"
+        },
+        {
+            "question": "18. Your approach to responsibility is:",
+            "options": [
+                {"text": "Avoid taking charge", "value": "Low"},
+                {"text": "Take charge when needed", "value": "Medium"},
+                {"text": "Seek leadership roles", "value": "High"}
+            ],
+            "feature": "Leadership_Skills"
+        },
+        {
+            "question": "19. In team projects, you usually:",
+            "options": [
+                {"text": "Follow others' lead", "value": "Low"},
+                {"text": "Share leadership duties", "value": "Medium"},
+                {"text": "Organize the team's work", "value": "High"}
+            ],
+            "feature": "Leadership_Skills"
+        },
+        {
+            "question": "20. When making group decisions, you:",
+            "options": [
+                {"text": "Go with the majority", "value": "Low"},
+                {"text": "Voice your opinion when asked", "value": "Medium"},
+                {"text": "Facilitate the decision-making", "value": "High"}
+            ],
+            "feature": "Leadership_Skills"
+        },
+
+        # Teamwork Skills (21-24)
+        {
+            "question": "21. In group settings, you usually:",
+            "options": [
+                {"text": "Focus on your individual tasks", "value": "Low"},
+                {"text": "Coordinate when necessary", "value": "Medium"},
+                {"text": "Actively collaborate with others", "value": "High"}
+            ],
+            "feature": "Teamwork_Skills"
+        },
+        {
+            "question": "22. When a teammate needs help, you:",
+            "options": [
+                {"text": "Let them figure it out", "value": "Low"},
+                {"text": "Help if they ask", "value": "Medium"},
+                {"text": "Proactively offer assistance", "value": "High"}
+            ],
+            "feature": "Teamwork_Skills"
+        },
+        {
+            "question": "23. Your view on teamwork is:",
+            "options": [
+                {"text": "Prefer working alone", "value": "Low"},
+                {"text": "Teamwork has its benefits", "value": "Medium"},
+                {"text": "Believe in the power of collaboration", "value": "High"}
+            ],
+            "feature": "Teamwork_Skills"
+        },
+        {
+            "question": "24. In conflict situations, you:",
+            "options": [
+                {"text": "Avoid getting involved", "value": "Low"},
+                {"text": "Help mediate if needed", "value": "Medium"},
+                {"text": "Actively work to resolve conflicts", "value": "High"}
+            ],
+            "feature": "Teamwork_Skills"
+        },
+
+        # Additional Career-Relevant Questions (25-30)
+        {
+            "question": "25. How do you handle deadlines?",
+            "options": [
+                {"text": "I often procrastinate", "value": "Low"},
+                {"text": "I meet them with some effort", "value": "Medium"},
+                {"text": "I consistently meet them early", "value": "High"}
+            ],
+            "feature": "Time_Management"
+        },
+        {
+            "question": "26. When learning something new, you prefer:",
+            "options": [
+                {"text": "Hands-on practice", "value": "Practical"},
+                {"text": "Theoretical understanding", "value": "Theoretical"},
+                {"text": "Visual demonstrations", "value": "Visual"},
+                {"text": "Group discussions", "value": "Social"}
+            ],
+            "feature": "Learning_Style"
+        },
+        {
+            "question": "27. Your ideal work environment is:",
+            "options": [
+                {"text": "Structured and predictable", "value": "Structured"},
+                {"text": "Dynamic and changing", "value": "Dynamic"},
+                {"text": "Creative and open", "value": "Creative"},
+                {"text": "Fast-paced and challenging", "value": "Challenging"}
+            ],
+            "feature": "Work_Environment"
+        },
+        {
+            "question": "28. When faced with a problem, you:",
+            "options": [
+                {"text": "Follow established procedures", "value": "Procedural"},
+                {"text": "Brainstorm creative solutions", "value": "Creative"},
+                {"text": "Analyze data thoroughly", "value": "Analytical"},
+                {"text": "Ask others for advice", "value": "Collaborative"}
+            ],
+            "feature": "Problem_Solving"
+        },
+        {
+            "question": "29. When making decisions, you rely mostly on:",
+            "options": [
+                {"text": "Logic and facts", "value": "Logical"},
+                {"text": "Gut feelings", "value": "Intuitive"},
+                {"text": "Others' opinions", "value": "Social"},
+                {"text": "Past experiences", "value": "Experiential"}
+            ],
+            "feature": "Decision_Making"
+        },
+        {
+            "question": "30. You consider yourself more:",
+            "options": [
+                {"text": "Realistic and practical", "value": "Practical"},
+                {"text": "Imaginative and innovative", "value": "Innovative"},
+                {"text": "People-oriented", "value": "Social"},
+                {"text": "Detail-oriented", "value": "Detail"}
+            ],
+            "feature": "Self_Perception"
+        }
     ]
 
 @st.cache_data
