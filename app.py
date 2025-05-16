@@ -387,7 +387,10 @@ def get_randomized_questions():
     
     # Then fill remaining slots randomly
     remaining = [q for q in all_questions if q not in selected]
-    selected.extend(random.sample(remaining, min(10 - len(selected), len(remaining))))
+    remaining_to_select = min(10 - len(selected), len(remaining))
+    
+    if remaining_to_select > 0:
+        selected.extend(random.sample(remaining, remaining_to_select))
     
     random.shuffle(selected)
     return selected
