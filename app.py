@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import streamlit as st
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score
@@ -10,7 +10,7 @@ import random
 
 # ====================== STYLING & SETUP ======================
 st.set_page_config(
-    page_title="Career Path Predictor",
+    page_title="Career Path Finder",
     page_icon="🧭",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -110,7 +110,7 @@ def load_data():
         data = pd.read_excel("new_updated_data.xlsx")
         if len(data['Predicted_Career_Field'].unique()) < 20:
             data['Predicted_Career_Field'] = np.random.choice(career_options, size=len(data))
-    except:
+    except FileNotFoundError:
         st.warning("⚠️ Dataset not found. Using demo data.")
         data = pd.DataFrame({
             'Interest': np.random.choice(['Technology', 'Business', 'Arts', 'Engineering', 'Medical', 'Science', 'Education', 'Law'], 200),
@@ -170,7 +170,7 @@ model, accuracy = train_model(processed_data)
 
 # ====================== QUESTIONNAIRE ======================
 def get_all_questions():
-    """Returns the full pool of questions"""
+    """Returns the full pool of 20 questions"""
     return [
         {
             "question": "1. Which of these activities excites you most?",
@@ -187,7 +187,21 @@ def get_all_questions():
             "feature": "Interest"
         },
         {
-            "question": "2. How do you prefer to work?",
+            "question": "2. What type of books/movies do you enjoy most?",
+            "options": [
+                {"text": "Sci-fi and technology", "value": "Technology"},
+                {"text": "Business success stories", "value": "Business"},
+                {"text": "Creative arts and design", "value": "Arts"},
+                {"text": "How things work", "value": "Engineering"},
+                {"text": "Medical dramas", "value": "Medical"},
+                {"text": "Scientific discoveries", "value": "Science"},
+                {"text": "Educational content", "value": "Education"},
+                {"text": "Courtroom dramas", "value": "Law"}
+            ],
+            "feature": "Interest"
+        },
+        {
+            "question": "3. How do you prefer to work?",
             "options": [
                 {"text": "Alone with clear tasks", "value": "Independent"},
                 {"text": "In a team environment", "value": "Collaborative"},
@@ -196,7 +210,16 @@ def get_all_questions():
             "feature": "Work_Style"
         },
         {
-            "question": "3. What comes most naturally to you?",
+            "question": "4. Your ideal project would involve:",
+            "options": [
+                {"text": "Working independently on your part", "value": "Independent"},
+                {"text": "Constant collaboration with others", "value": "Collaborative"},
+                {"text": "Some teamwork with independent phases", "value": "Flexible"}
+            ],
+            "feature": "Work_Style"
+        },
+        {
+            "question": "5. What comes most naturally to you?",
             "options": [
                 {"text": "Solving complex problems", "value": "Analytical"},
                 {"text": "Coming up with creative ideas", "value": "Creative"},
@@ -206,7 +229,17 @@ def get_all_questions():
             "feature": "Strengths"
         },
         {
-            "question": "4. In social situations, you:",
+            "question": "6. Others would describe you as:",
+            "options": [
+                {"text": "Logical and detail-oriented", "value": "Analytical"},
+                {"text": "Imaginative and original", "value": "Creative"},
+                {"text": "Visionary and forward-thinking", "value": "Strategic"},
+                {"text": "Hands-on and resourceful", "value": "Practical"}
+            ],
+            "feature": "Strengths"
+        },
+        {
+            "question": "7. In social situations, you:",
             "options": [
                 {"text": "Prefer listening to speaking", "value": "Low"},
                 {"text": "Speak when you have something to say", "value": "Medium"},
@@ -215,7 +248,16 @@ def get_all_questions():
             "feature": "Communication_Skills"
         },
         {
-            "question": "5. When a group needs direction, you:",
+            "question": "8. When explaining something complex, you:",
+            "options": [
+                {"text": "Struggle to put it in simple terms", "value": "Low"},
+                {"text": "Can explain if you prepare", "value": "Medium"},
+                {"text": "Naturally simplify complex ideas", "value": "High"}
+            ],
+            "feature": "Communication_Skills"
+        },
+        {
+            "question": "9. When a group needs direction, you:",
             "options": [
                 {"text": "Wait for someone else to step up", "value": "Low"},
                 {"text": "Help if no one else does", "value": "Medium"},
@@ -224,19 +266,131 @@ def get_all_questions():
             "feature": "Leadership_Skills"
         },
         {
-            "question": "6. In group settings, you usually:",
+            "question": "10. Your approach to responsibility is:",
+            "options": [
+                {"text": "Avoid taking charge", "value": "Low"},
+                {"text": "Take charge when needed", "value": "Medium"},
+                {"text": "Seek leadership roles", "value": "High"}
+            ],
+            "feature": "Leadership_Skills"
+        },
+        {
+            "question": "11. In group settings, you usually:",
             "options": [
                 {"text": "Focus on your individual tasks", "value": "Low"},
                 {"text": "Coordinate when necessary", "value": "Medium"},
                 {"text": "Actively collaborate with others", "value": "High"}
             ],
             "feature": "Teamwork_Skills"
+        },
+        {
+            "question": "12. When a teammate needs help, you:",
+            "options": [
+                {"text": "Let them figure it out", "value": "Low"},
+                {"text": "Help if they ask", "value": "Medium"},
+                {"text": "Proactively offer assistance", "value": "High"}
+            ],
+            "feature": "Teamwork_Skills"
+        },
+        {
+            "question": "13. How do you handle deadlines?",
+            "options": [
+                {"text": "I often procrastinate", "value": "Low"},
+                {"text": "I meet them with some effort", "value": "Medium"},
+                {"text": "I consistently meet them early", "value": "High"}
+            ],
+            "feature": "Time_Management"
+        },
+        {
+            "question": "14. When learning something new, you prefer:",
+            "options": [
+                {"text": "Hands-on practice", "value": "Practical"},
+                {"text": "Theoretical understanding", "value": "Theoretical"},
+                {"text": "Visual demonstrations", "value": "Visual"},
+                {"text": "Group discussions", "value": "Social"}
+            ],
+            "feature": "Learning_Style"
+        },
+        {
+            "question": "15. Your ideal work environment is:",
+            "options": [
+                {"text": "Structured and predictable", "value": "Structured"},
+                {"text": "Dynamic and changing", "value": "Dynamic"},
+                {"text": "Creative and open", "value": "Creative"},
+                {"text": "Fast-paced and challenging", "value": "Challenging"}
+            ],
+            "feature": "Work_Environment"
+        },
+        {
+            "question": "16. When faced with a problem, you:",
+            "options": [
+                {"text": "Follow established procedures", "value": "Procedural"},
+                {"text": "Brainstorm creative solutions", "value": "Creative"},
+                {"text": "Analyze data thoroughly", "value": "Analytical"},
+                {"text": "Ask others for advice", "value": "Collaborative"}
+            ],
+            "feature": "Problem_Solving"
+        },
+        {
+            "question": "17. Your preferred way to receive feedback is:",
+            "options": [
+                {"text": "Written comments", "value": "Written"},
+                {"text": "Face-to-face discussion", "value": "Verbal"},
+                {"text": "Through examples", "value": "Demonstration"},
+                {"text": "Self-assessment", "value": "Independent"}
+            ],
+            "feature": "Feedback_Style"
+        },
+        {
+            "question": "18. When making decisions, you rely mostly on:",
+            "options": [
+                {"text": "Logic and facts", "value": "Logical"},
+                {"text": "Gut feelings", "value": "Intuitive"},
+                {"text": "Others' opinions", "value": "Social"},
+                {"text": "Past experiences", "value": "Experiential"}
+            ],
+            "feature": "Decision_Making"
+        },
+        {
+            "question": "19. Your energy level is highest:",
+            "options": [
+                {"text": "In the morning", "value": "Morning"},
+                {"text": "In the afternoon", "value": "Afternoon"},
+                {"text": "In the evening", "value": "Evening"},
+                {"text": "It varies day to day", "value": "Variable"}
+            ],
+            "feature": "Energy_Patterns"
+        },
+        {
+            "question": "20. You consider yourself more:",
+            "options": [
+                {"text": "Realistic and practical", "value": "Practical"},
+                {"text": "Imaginative and innovative", "value": "Innovative"},
+                {"text": "People-oriented", "value": "Social"},
+                {"text": "Detail-oriented", "value": "Detail"}
+            ],
+            "feature": "Self_Perception"
         }
     ]
 
-def get_selected_questions():
-    """Returns a fixed set of questions (simpler approach)"""
-    return get_all_questions()[:6]  # Just use the first 6 questions
+def get_randomized_questions():
+    """Selects 10 random questions from the pool of 20"""
+    all_questions = get_all_questions()
+    # Ensure we get at least one question from each category
+    features = list(set(q['feature'] for q in all_questions))
+    selected = []
+    
+    # First pick one from each feature category
+    for feature in features:
+        feature_questions = [q for q in all_questions if q['feature'] == feature]
+        selected.append(random.choice(feature_questions))
+    
+    # Then fill remaining slots randomly
+    remaining = [q for q in all_questions if q not in selected]
+    selected.extend(random.sample(remaining, min(10 - len(selected), len(remaining))))
+    
+    random.shuffle(selected)
+    return selected
 
 direct_input_features = {
     "GPA": {
@@ -272,9 +426,9 @@ def main():
     if 'user_responses' not in st.session_state:
         st.session_state.user_responses = {}
     
-    # Get questions
+    # Get new questions if this is a new session or we need to reset
     if 'questions' not in st.session_state or st.session_state.get('reset_questions', False):
-        st.session_state.questions = get_selected_questions()
+        st.session_state.questions = get_randomized_questions()
         st.session_state.reset_questions = False
     
     tab1, tab2 = st.tabs(["Take Assessment", "Career Insights"])
@@ -282,13 +436,14 @@ def main():
     with tab1:
         st.header("Career Compatibility Assessment")
         
+        # Show restart button if we have previous responses
         if st.session_state.user_responses:
             if st.button("🔄 Start New Assessment"):
                 st.session_state.user_responses = {}
                 st.session_state.reset_questions = True
                 st.experimental_rerun()
         
-        st.write("Answer these questions to discover careers that fit your profile.")
+        st.write("Answer these 10 questions to discover careers that fit your profile.")
         
         with st.expander("Your Background"):
             for feature, config in direct_input_features.items():
@@ -336,7 +491,7 @@ def main():
                             elif col in le_dict:
                                 try:
                                     input_data[col] = le_dict[col].transform([st.session_state.user_responses[col]])[0]
-                                except:
+                                except ValueError:
                                     input_data[col] = processed_data[col].mode()[0]
                             else:
                                 input_data[col] = st.session_state.user_responses[col]
@@ -389,23 +544,20 @@ def main():
                                 with cols[1]:
                                     st.metric("Avg. Experience", f"{career_data['Years_of_Experience'].mean():.1f} years")
                                 with cols[2]:
-                                    if not career_data['Interest'].empty:
-                                        st.metric("Common Interest", career_data['Interest'].mode()[0])
+                                    st.metric("Common Interest", career_data['Interest'].mode()[0])
                                 
                                 st.write("\n**Common characteristics:**")
-                                if not career_data['Work_Style'].empty:
-                                    st.write(f"- Work Style: {career_data['Work_Style'].mode()[0]}")
-                                if not career_data['Strengths'].empty:
-                                    st.write(f"- Strengths: {career_data['Strengths'].mode()[0]}")
-                                if not career_data['Communication_Skills'].empty:
-                                    st.write(f"- Communication: {career_data['Communication_Skills'].mode()[0]}")
+                                st.write(f"- Work Style: {career_data['Work_Style'].mode()[0]}")
+                                st.write(f"- Strengths: {career_data['Strengths'].mode()[0]}")
+                                st.write(f"- Communication: {career_data['Communication_Skills'].mode()[0]}")
                             else:
                                 st.write("No additional information available for this career in our dataset.")
                         
+                        # Set flag to reset questions next time
                         st.session_state.reset_questions = True
                         
                     except Exception as e:
-                        st.error(f"We encountered an issue analyzing your profile. Please try again.")
+                        st.error(f"We encountered an issue analyzing your profile. Error: {str(e)}")
     
     with tab2:
         st.header("📊 Career Insights")
@@ -439,8 +591,7 @@ def main():
             with cols[1]:
                 st.metric("Avg. Experience", f"{career_data['Years_of_Experience'].mean():.1f} years")
             with cols[2]:
-                if not career_data['Interest'].empty:
-                    st.metric("Common Interest", career_data['Interest'].mode()[0])
+                st.metric("Common Interest", career_data['Interest'].mode()[0])
 
 if __name__ == "__main__":
-    main()
+    main()         this is code
