@@ -486,13 +486,10 @@ def get_all_questions():
         }
     ]
 
-import random
-
-@st.cache_data
 def get_randomized_questions():
-    """Selects 10 random questions from the pool of 20."""
-    all_questions = get_all_questions()  # assuming this returns a list of questions
-    features = list(set(q['feature'] for q in all_questions))  # Features represent different categories
+    """Selects 10 random questions from the pool of 30."""
+    all_questions = get_all_questions()
+    features = list(set(q['feature'] for q in all_questions))
     selected = []
 
     # First pick one from each feature category
@@ -513,7 +510,6 @@ def get_randomized_questions():
 
     random.shuffle(selected)
     return selected
-
 
 direct_input_features = {
     "GPA": {
@@ -556,12 +552,13 @@ def main():
     with tab1:
         st.header("Career Compatibility Assessment")
         
-        # Show restart button if we have previous responses
+        # Show restart button at the top
         if st.session_state.user_responses:
-            if st.button("🔄 Start New Assessment"):
+            if st.button("🔄 Start New Assessment", key="restart_button_top"):
                 st.session_state.user_responses = {}
                 st.session_state.questions = get_randomized_questions()
                 st.rerun()
+            st.write("---")
         
         st.write("Answer these questions to discover careers that fit your profile.")
         
@@ -585,6 +582,14 @@ def main():
             )
             selected_value = q["options"][[opt["text"] for opt in q["options"]].index(selected_option)]["value"]
             st.session_state.user_responses[q["feature"]] = selected_value
+        
+        # Show restart button at the bottom as well
+        if st.session_state.user_responses:
+            st.write("---")
+            if st.button("🔄 Start New Assessment", key="restart_button_bottom"):
+                st.session_state.user_responses = {}
+                st.session_state.questions = get_randomized_questions()
+                st.rerun()
         
         if st.button("🔮 Find My Career Match"):
             required_fields = list(direct_input_features.keys()) + ['Interest', 'Work_Style', 'Strengths']
