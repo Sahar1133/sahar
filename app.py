@@ -263,7 +263,7 @@ def main():
                 st.session_state.questions = get_randomized_questions()
                 st.rerun()
         
-        st.write("Answer these 10 questions to discover careers that fit your profile.")
+        st.write("Answer these questions to discover careers that fit your profile.")
         
         with st.expander("Your Background"):
             for feature, config in direct_input_features.items():
