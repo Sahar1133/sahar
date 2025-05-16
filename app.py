@@ -373,6 +373,7 @@ def get_all_questions():
         }
     ]
 
+@st.cache_data
 def get_randomized_questions():
     """Selects 10 random questions from the pool of 20"""
     all_questions = get_all_questions()
@@ -422,7 +423,13 @@ direct_input_features = {
 # ====================== STREAMLIT APP ======================
 def main():
     apply_custom_css()
-    
+
+    # Initialize all session state variables
+    if 'user_responses' not in st.session_state:
+        st.session_state.user_responses = {}
+    if 'questions' not in st.session_state:
+        st.session_state.questions = get_randomized_questions()
+        
     st.title("🧭 Career Path Finder")
     st.markdown("Discover careers that match your unique strengths and preferences.")
     
