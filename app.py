@@ -169,8 +169,9 @@ def train_model(data):
 model, accuracy = train_model(processed_data)
 
 # ====================== QUESTIONNAIRE ======================
-def get_randomized_questions():
-    all_questions = [
+def get_all_questions():
+    """Returns the full pool of 20 questions"""
+    return [
         {
             "question": "1. Which of these activities excites you most?",
             "options": [
@@ -319,12 +320,77 @@ def get_randomized_questions():
                 {"text": "Fast-paced and challenging", "value": "Challenging"}
             ],
             "feature": "Work_Environment"
+        },
+        {
+            "question": "16. When faced with a problem, you:",
+            "options": [
+                {"text": "Follow established procedures", "value": "Procedural"},
+                {"text": "Brainstorm creative solutions", "value": "Creative"},
+                {"text": "Analyze data thoroughly", "value": "Analytical"},
+                {"text": "Ask others for advice", "value": "Collaborative"}
+            ],
+            "feature": "Problem_Solving"
+        },
+        {
+            "question": "17. Your preferred way to receive feedback is:",
+            "options": [
+                {"text": "Written comments", "value": "Written"},
+                {"text": "Face-to-face discussion", "value": "Verbal"},
+                {"text": "Through examples", "value": "Demonstration"},
+                {"text": "Self-assessment", "value": "Independent"}
+            ],
+            "feature": "Feedback_Style"
+        },
+        {
+            "question": "18. When making decisions, you rely mostly on:",
+            "options": [
+                {"text": "Logic and facts", "value": "Logical"},
+                {"text": "Gut feelings", "value": "Intuitive"},
+                {"text": "Others' opinions", "value": "Social"},
+                {"text": "Past experiences", "value": "Experiential"}
+            ],
+            "feature": "Decision_Making"
+        },
+        {
+            "question": "19. Your energy level is highest:",
+            "options": [
+                {"text": "In the morning", "value": "Morning"},
+                {"text": "In the afternoon", "value": "Afternoon"},
+                {"text": "In the evening", "value": "Evening"},
+                {"text": "It varies day to day", "value": "Variable"}
+            ],
+            "feature": "Energy_Patterns"
+        },
+        {
+            "question": "20. You consider yourself more:",
+            "options": [
+                {"text": "Realistic and practical", "value": "Practical"},
+                {"text": "Imaginative and innovative", "value": "Innovative"},
+                {"text": "People-oriented", "value": "Social"},
+                {"text": "Detail-oriented", "value": "Detail"}
+            ],
+            "feature": "Self_Perception"
         }
     ]
+
+def get_randomized_questions():
+    """Selects 10 random questions from the pool of 20"""
+    all_questions = get_all_questions()
+    # Ensure we get at least one question from each category
+    features = list(set(q['feature'] for q in all_questions))
+    selected = []
     
-    # Select all 15 questions (no random selection)
-    selected_questions = all_questions[:15]
-    return selected_questions
+    # First pick one from each feature category
+    for feature in features:
+        feature_questions = [q for q in all_questions if q['feature'] == feature]
+        selected.append(random.choice(feature_questions))
+    
+    # Then fill remaining slots randomly
+    remaining = [q for q in all_questions if q not in selected]
+    selected.extend(random.sample(remaining, min(10 - len(selected), len(remaining))))
+    
+    random.shuffle(selected)
+    return selected
 
 direct_input_features = {
     "GPA": {
@@ -356,17 +422,28 @@ def main():
     st.sidebar.info("This assessment helps match your profile with suitable career options.")
     st.sidebar.write(f"*Based on analysis of {len(data)} career paths*")
     
+    # Initialize session state
     if 'user_responses' not in st.session_state:
         st.session_state.user_responses = {}
     
-    if 'questions' not in st.session_state:
+    # Get new questions if this is a new session or we need to reset
+    if 'questions' not in st.session_state or st.session_state.get('reset_questions', False):
         st.session_state.questions = get_randomized_questions()
+        st.session_state.reset_questions = False
     
     tab1, tab2 = st.tabs(["Take Assessment", "Career Insights"])
     
     with tab1:
         st.header("Career Compatibility Assessment")
-        st.write("Answer these questions to discover careers that fit your profile.")
+        
+        # Show restart button if we have previous responses
+        if st.session_state.user_responses:
+            if st.button("🔄 Start New Assessment"):
+                st.session_state.user_responses = {}
+                st.session_state.reset_questions = True
+                st.experimental_rerun()
+        
+        st.write("Answer these 10 questions to discover careers that fit your profile.")
         
         with st.expander("Your Background"):
             for feature, config in direct_input_features.items():
@@ -475,6 +552,9 @@ def main():
                                 st.write(f"- Communication: {career_data['Communication_Skills'].mode()[0]}")
                             else:
                                 st.write("No additional information available for this career in our dataset.")
+                        
+                        # Set flag to reset questions next time
+                        st.session_state.reset_questions = True
                         
                     except Exception as e:
                         st.error(f"We encountered an issue analyzing your profile. Error: {str(e)}")
