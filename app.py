@@ -62,15 +62,6 @@ def apply_custom_css():
         background: #e0e5ff;
     }
     
-    /* Question explanations */
-    .question-explanation {
-        font-size: 0.9em;
-        color: #666;
-        margin-top: -10px;
-        margin-bottom: 15px;
-        font-style: italic;
-    }
-    
     /* Headers */
     h1 {
         color: #2c3e50;
@@ -181,8 +172,7 @@ model, accuracy = train_model(processed_data)
 def get_randomized_questions():
     all_questions = [
         {
-            "question": "Which of these activities excites you most?",
-            "explanation": "This helps us understand your core interests and passions.",
+            "question": "1. Which of these activities excites you most?",
             "options": [
                 {"text": "Coding or working with technology", "value": "Technology"},
                 {"text": "Analyzing market trends", "value": "Business"},
@@ -196,8 +186,7 @@ def get_randomized_questions():
             "feature": "Interest"
         },
         {
-            "question": "What type of books/movies do you enjoy most?",
-            "explanation": "Your entertainment preferences reveal hidden aspects of your personality.",
+            "question": "2. What type of books/movies do you enjoy most?",
             "options": [
                 {"text": "Sci-fi and technology", "value": "Technology"},
                 {"text": "Business success stories", "value": "Business"},
@@ -211,8 +200,7 @@ def get_randomized_questions():
             "feature": "Interest"
         },
         {
-            "question": "How do you prefer to work?",
-            "explanation": "Different careers require different work styles - be honest!",
+            "question": "3. How do you prefer to work?",
             "options": [
                 {"text": "Alone with clear tasks", "value": "Independent"},
                 {"text": "In a team environment", "value": "Collaborative"},
@@ -220,27 +208,127 @@ def get_randomized_questions():
             ],
             "feature": "Work_Style"
         },
-        # ... (other questions with added explanations)
+        {
+            "question": "4. Your ideal project would involve:",
+            "options": [
+                {"text": "Working independently on your part", "value": "Independent"},
+                {"text": "Constant collaboration with others", "value": "Collaborative"},
+                {"text": "Some teamwork with independent phases", "value": "Flexible"}
+            ],
+            "feature": "Work_Style"
+        },
+        {
+            "question": "5. What comes most naturally to you?",
+            "options": [
+                {"text": "Solving complex problems", "value": "Analytical"},
+                {"text": "Coming up with creative ideas", "value": "Creative"},
+                {"text": "Planning long-term strategies", "value": "Strategic"},
+                {"text": "Building practical solutions", "value": "Practical"}
+            ],
+            "feature": "Strengths"
+        },
+        {
+            "question": "6. Others would describe you as:",
+            "options": [
+                {"text": "Logical and detail-oriented", "value": "Analytical"},
+                {"text": "Imaginative and original", "value": "Creative"},
+                {"text": "Visionary and forward-thinking", "value": "Strategic"},
+                {"text": "Hands-on and resourceful", "value": "Practical"}
+            ],
+            "feature": "Strengths"
+        },
+        {
+            "question": "7. In social situations, you:",
+            "options": [
+                {"text": "Prefer listening to speaking", "value": "Low"},
+                {"text": "Speak when you have something to say", "value": "Medium"},
+                {"text": "Easily engage in conversations", "value": "High"}
+            ],
+            "feature": "Communication_Skills"
+        },
+        {
+            "question": "8. When explaining something complex, you:",
+            "options": [
+                {"text": "Struggle to put it in simple terms", "value": "Low"},
+                {"text": "Can explain if you prepare", "value": "Medium"},
+                {"text": "Naturally simplify complex ideas", "value": "High"}
+            ],
+            "feature": "Communication_Skills"
+        },
+        {
+            "question": "9. When a group needs direction, you:",
+            "options": [
+                {"text": "Wait for someone else to step up", "value": "Low"},
+                {"text": "Help if no one else does", "value": "Medium"},
+                {"text": "Naturally take the lead", "value": "High"}
+            ],
+            "feature": "Leadership_Skills"
+        },
+        {
+            "question": "10. Your approach to responsibility is:",
+            "options": [
+                {"text": "Avoid taking charge", "value": "Low"},
+                {"text": "Take charge when needed", "value": "Medium"},
+                {"text": "Seek leadership roles", "value": "High"}
+            ],
+            "feature": "Leadership_Skills"
+        },
+        {
+            "question": "11. In group settings, you usually:",
+            "options": [
+                {"text": "Focus on your individual tasks", "value": "Low"},
+                {"text": "Coordinate when necessary", "value": "Medium"},
+                {"text": "Actively collaborate with others", "value": "High"}
+            ],
+            "feature": "Teamwork_Skills"
+        },
+        {
+            "question": "12. When a teammate needs help, you:",
+            "options": [
+                {"text": "Let them figure it out", "value": "Low"},
+                {"text": "Help if they ask", "value": "Medium"},
+                {"text": "Proactively offer assistance", "value": "High"}
+            ],
+            "feature": "Teamwork_Skills"
+        },
+        {
+            "question": "13. How do you handle deadlines?",
+            "options": [
+                {"text": "I often procrastinate", "value": "Low"},
+                {"text": "I meet them with some effort", "value": "Medium"},
+                {"text": "I consistently meet them early", "value": "High"}
+            ],
+            "feature": "Time_Management"
+        },
+        {
+            "question": "14. When learning something new, you prefer:",
+            "options": [
+                {"text": "Hands-on practice", "value": "Practical"},
+                {"text": "Theoretical understanding", "value": "Theoretical"},
+                {"text": "Visual demonstrations", "value": "Visual"},
+                {"text": "Group discussions", "value": "Social"}
+            ],
+            "feature": "Learning_Style"
+        },
+        {
+            "question": "15. Your ideal work environment is:",
+            "options": [
+                {"text": "Structured and predictable", "value": "Structured"},
+                {"text": "Dynamic and changing", "value": "Dynamic"},
+                {"text": "Creative and open", "value": "Creative"},
+                {"text": "Fast-paced and challenging", "value": "Challenging"}
+            ],
+            "feature": "Work_Environment"
+        }
     ]
     
-    # Rest of the question randomization logic remains the same
-    feature_categories = list(set([q['feature'] for q in all_questions]))
-    selected_questions = []
-    
-    for feature in feature_categories:
-        feature_questions = [q for q in all_questions if q['feature'] == feature]
-        selected_questions.append(random.choice(feature_questions))
-    
-    remaining_questions = [q for q in all_questions if q not in selected_questions]
-    selected_questions.extend(random.sample(remaining_questions, min(10 - len(selected_questions), len(remaining_questions))))
-    
-    random.shuffle(selected_questions)
+    # Select all 15 questions (no random selection)
+    selected_questions = all_questions[:15]
     return selected_questions
 
 direct_input_features = {
     "GPA": {
         "question": "What is your approximate GPA (0.0-4.0)?",
-        "explanation": "Your academic performance helps us match you with suitable career paths.",
         "type": "number", 
         "min": 0.0, 
         "max": 4.0, 
@@ -249,7 +337,6 @@ direct_input_features = {
     },
     "Years_of_Experience": {
         "question": "Years of professional experience (if any):",
-        "explanation": "Existing experience can open doors to more advanced career options.",
         "type": "number", 
         "min": 0, 
         "max": 50, 
@@ -279,14 +366,12 @@ def main():
     
     with tab1:
         st.header("Career Compatibility Assessment")
-        st.write("Answer these questions to discover careers that fit your profile.")
+        st.write("Answer these 15 questions to discover careers that fit your profile.")
         
         with st.expander("Your Background"):
             for feature, config in direct_input_features.items():
-                st.write(f"**{config['question']}**")
-                st.markdown(f'<div class="question-explanation">{config["explanation"]}</div>', unsafe_allow_html=True)
                 st.session_state.user_responses[feature] = st.number_input(
-                    "Enter your answer:",
+                    config["question"],
                     min_value=config["min"],
                     max_value=config["max"],
                     value=config["default"],
@@ -294,12 +379,10 @@ def main():
                     key=f"num_{feature}"
                 )
         
-        st.subheader("About You")
+        st.subheader("Personality and Preferences")
         for i, q in enumerate(st.session_state.questions):
-            st.write(f"**{q['question']}**")
-            st.markdown(f'<div class="question-explanation">{q["explanation"]}</div>', unsafe_allow_html=True)
             selected_option = st.radio(
-                "Select your answer:",
+                q["question"],
                 [opt["text"] for opt in q["options"]],
                 key=f"q_{i}"
             )
