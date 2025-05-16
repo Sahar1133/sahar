@@ -6,6 +6,7 @@ from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score
+import random
 
 # ====================== STYLING & SETUP ======================
 st.set_page_config(
@@ -153,7 +154,7 @@ def train_model(data):
 model, accuracy = train_model(processed_data)
 
 # ====================== QUESTIONNAIRE ======================
-questions = {
+all_questions = {
     "Interest": [
         {
             "question": "Which of these subjects interests you most?",
@@ -174,6 +175,16 @@ questions = {
                 {"text": "Build or fix things", "value": "Engineering"},
                 {"text": "Help others with health advice", "value": "Medical"}
             ]
+        },
+        {
+            "question": "Which type of books/magazines do you prefer?",
+            "options": [
+                {"text": "Tech journals and programming books", "value": "Technology"},
+                {"text": "Business and finance publications", "value": "Business"},
+                {"text": "Art and design magazines", "value": "Arts"},
+                {"text": "Engineering manuals", "value": "Engineering"},
+                {"text": "Medical journals", "value": "Medical"}
+            ]
         }
     ],
     "Work_Style": [
@@ -191,6 +202,14 @@ questions = {
                 {"text": "Prefer to solve it yourself", "value": "Independent"},
                 {"text": "Brainstorm with colleagues", "value": "Collaborative"},
                 {"text": "Depends on the situation", "value": "Flexible"}
+            ]
+        },
+        {
+            "question": "Your preferred work schedule is:",
+            "options": [
+                {"text": "Strict 9-5 with clear boundaries", "value": "Independent"},
+                {"text": "Flexible hours with team coordination", "value": "Collaborative"},
+                {"text": "Mix of structured and flexible time", "value": "Flexible"}
             ]
         }
     ],
@@ -212,6 +231,15 @@ questions = {
                 {"text": "Seeing the big picture", "value": "Strategic"},
                 {"text": "Building physical solutions", "value": "Practical"}
             ]
+        },
+        {
+            "question": "In school, you excelled at:",
+            "options": [
+                {"text": "Math and science subjects", "value": "Analytical"},
+                {"text": "Creative writing and arts", "value": "Creative"},
+                {"text": "History and social studies", "value": "Strategic"},
+                {"text": "Shop class and hands-on projects", "value": "Practical"}
+            ]
         }
     ],
     "Communication_Skills": [
@@ -229,6 +257,14 @@ questions = {
                 {"text": "Rarely speak up", "value": "Low"},
                 {"text": "Contribute when asked", "value": "Medium"},
                 {"text": "Frequently share ideas", "value": "High"}
+            ]
+        },
+        {
+            "question": "When explaining complex topics, you:",
+            "options": [
+                {"text": "Struggle to explain clearly", "value": "Low"},
+                {"text": "Can explain with some effort", "value": "Medium"},
+                {"text": "Explain clearly and effectively", "value": "High"}
             ]
         }
     ],
@@ -248,6 +284,14 @@ questions = {
                 {"text": "Lead when necessary", "value": "Medium"},
                 {"text": "Naturally take charge", "value": "High"}
             ]
+        },
+        {
+            "question": "When conflicts arise in a team, you:",
+            "options": [
+                {"text": "Avoid getting involved", "value": "Low"},
+                {"text": "Help mediate if asked", "value": "Medium"},
+                {"text": "Proactively resolve conflicts", "value": "High"}
+            ]
         }
     ],
     "Teamwork_Skills": [
@@ -266,6 +310,32 @@ questions = {
                 {"text": "Help if they ask directly", "value": "Medium"},
                 {"text": "Proactively offer assistance", "value": "High"}
             ]
+        },
+        {
+            "question": "Your approach to team decisions is:",
+            "options": [
+                {"text": "Prefer others to decide", "value": "Low"},
+                {"text": "Contribute but go with majority", "value": "Medium"},
+                {"text": "Actively shape team decisions", "value": "High"}
+            ]
+        }
+    ],
+    "Problem_Solving": [
+        {
+            "question": "When facing a new problem, you:",
+            "options": [
+                {"text": "Follow established procedures", "value": "Low"},
+                {"text": "Combine known methods", "value": "Medium"},
+                {"text": "Invent new approaches", "value": "High"}
+            ]
+        },
+        {
+            "question": "Your problem-solving style is:",
+            "options": [
+                {"text": "Methodical and step-by-step", "value": "Low"},
+                {"text": "Balanced between creative and logical", "value": "Medium"},
+                {"text": "Highly innovative and unconventional", "value": "High"}
+            ]
         }
     ]
 }
@@ -275,6 +345,13 @@ direct_input_features = {
     "Years_of_Experience": {"type": "number", "min": 0, "max": 50, "step": 1, "default": 5}
 }
 
+def select_random_questions(all_questions, questions_per_category=2):
+    """Select random questions from each category"""
+    selected_questions = {}
+    for category, question_list in all_questions.items():
+        selected_questions[category] = random.sample(question_list, min(questions_per_category, len(question_list)))
+    return selected_questions
+
 # ====================== STREAMLIT APP ======================
 def main():
     apply_custom_css()
@@ -282,10 +359,19 @@ def main():
     st.title("🧠 AI Career Prediction System")
     st.markdown("Discover your ideal career path based on your skills and preferences.")
     
+    # Initialize session state for questions if not already present
+    if 'selected_questions' not in st.session_state:
+        st.session_state.selected_questions = select_random_questions(all_questions)
+    
     # Sidebar
     st.sidebar.title("About")
     st.sidebar.info("This tool uses machine learning to match your profile with suitable careers.")
     st.sidebar.write(f"Model Accuracy: **{accuracy:.1%}**")
+    
+    # Add button to reshuffle questions
+    if st.sidebar.button("🔄 Get New Questions"):
+        st.session_state.selected_questions = select_random_questions(all_questions)
+        st.rerun()
     
     # Tabs
     tab1, tab2 = st.tabs(["Career Prediction", "Data Insights"])
@@ -306,7 +392,7 @@ def main():
                 )
         
         # Questionnaire
-        for feature, question_list in questions.items():
+        for feature, question_list in st.session_state.selected_questions.items():
             with st.expander(f"🔹 {feature.replace('_', ' ')}"):
                 for i, question in enumerate(question_list):
                     selected_option = st.radio(
@@ -339,7 +425,7 @@ def main():
                     for col in input_data.columns:
                         if col in user_responses:
                             if isinstance(user_responses[col], list):  # For question-based features
-                                if col in ['Communication_Skills', 'Leadership_Skills', 'Teamwork_Skills']:
+                                if col in ['Communication_Skills', 'Leadership_Skills', 'Teamwork_Skills', 'Problem_Solving']:
                                     # Handle Low/Medium/High scale
                                     level_map = {"Low": 0, "Medium": 1, "High": 2}
                                     avg_level = np.mean([level_map[val] for val in user_responses[col]])
