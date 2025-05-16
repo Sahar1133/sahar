@@ -373,7 +373,7 @@ def get_all_questions():
         }
     ]
 
-ddef get_randomized_questions():
+def get_randomized_questions():
     """Selects 10 random questions from the pool of 20"""
     all_questions = get_all_questions()
     # Ensure we get at least one question from each category
