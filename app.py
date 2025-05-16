@@ -10,7 +10,7 @@ import random
 
 # ====================== STYLING & SETUP ======================
 st.set_page_config(
-    page_title="Career Path Finder",
+    page_title="Career Path Predictor",
     page_icon="🧭",
     layout="wide",
     initial_sidebar_state="expanded"
