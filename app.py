@@ -551,13 +551,6 @@ def main():
     
     with tab1:
         st.header("Career Compatibility Assessment")
-        
-        # Show restart button at the top
-        if st.session_state.user_responses:
-            if st.button("🔄 Start New Assessment", key="restart_button_top"):
-                st.session_state.user_responses = {}
-                st.session_state.questions = get_randomized_questions()
-                st.rerun()
             st.write("---")
         
         st.write("Answer these questions to discover careers that fit your profile.")
