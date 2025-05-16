@@ -156,132 +156,162 @@ def train_model(data):
 model, accuracy = train_model(processed_data)
 
 # ====================== QUESTIONNAIRE ======================
-questions = {
-    "Interest": [
-        {
-            "question": "Which of these fields interests you most?",
-            "options": [
-                {"text": "Technology (Software, AI, IT)", "value": "Technology"},
-                {"text": "Business & Finance (Marketing, Banking)", "value": "Business"},
-                {"text": "Creative Arts (Design, Music, Writing)", "value": "Arts"},
-                {"text": "Engineering (Mechanical, Electrical)", "value": "Engineering"},
-                {"text": "Healthcare (Medicine, Nursing)", "value": "Medical"},
-                {"text": "Science (Physics, Biology, Research)", "value": "Science"},
-                {"text": "Education (Teaching, Training)", "value": "Education"},
-                {"text": "Law & Justice (Lawyer, Judge)", "value": "Law"}
-            ]
-        },
-        {
-            "question": "What type of projects excite you?",
-            "options": [
-                {"text": "Developing new software or apps", "value": "Technology"},
-                {"text": "Launching a new business/product", "value": "Business"},
-                {"text": "Creating artistic works", "value": "Arts"},
-                {"text": "Building physical structures/machines", "value": "Engineering"},
-                {"text": "Helping people with health issues", "value": "Medical"},
-                {"text": "Conducting scientific experiments", "value": "Science"},
-                {"text": "Teaching or mentoring others", "value": "Education"},
-                {"text": "Arguing cases or solving legal problems", "value": "Law"}
-            ]
-        }
-    ],
-    "Work_Style": [
-        {
-            "question": "Your ideal work environment is:",
-            "options": [
-                {"text": "Working alone with clear tasks", "value": "Independent"},
-                {"text": "Working closely with a team", "value": "Collaborative"},
-                {"text": "A mix of both with flexibility", "value": "Flexible"}
-            ]
-        },
-        {
-            "question": "When facing a complex problem, you:",
-            "options": [
-                {"text": "Prefer to solve it yourself", "value": "Independent"},
-                {"text": "Brainstorm with colleagues", "value": "Collaborative"},
-                {"text": "Depends on the situation", "value": "Flexible"}
-            ]
-        }
-    ],
-    "Strengths": [
-        {
-            "question": "Your strongest skill is:",
-            "options": [
-                {"text": "Analyzing data and patterns", "value": "Analytical"},
-                {"text": "Coming up with new ideas", "value": "Creative"},
-                {"text": "Planning long-term strategies", "value": "Strategic"},
-                {"text": "Hands-on problem solving", "value": "Practical"}
-            ]
-        },
-        {
-            "question": "You're particularly good at:",
-            "options": [
-                {"text": "Math and logical reasoning", "value": "Analytical"},
-                {"text": "Artistic expression", "value": "Creative"},
-                {"text": "Seeing the big picture", "value": "Strategic"},
-                {"text": "Building physical solutions", "value": "Practical"}
-            ]
-        }
-    ],
-    "Communication_Skills": [
-        {
-            "question": "How comfortable are you presenting ideas?",
-            "options": [
-                {"text": "Very uncomfortable", "value": "Low"},
-                {"text": "Somewhat comfortable", "value": "Medium"},
-                {"text": "Very comfortable", "value": "High"}
-            ]
-        },
-        {
-            "question": "In meetings, you typically:",
-            "options": [
-                {"text": "Rarely speak up", "value": "Low"},
-                {"text": "Contribute when asked", "value": "Medium"},
-                {"text": "Frequently share ideas", "value": "High"}
-            ]
-        }
-    ],
-    "Leadership_Skills": [
-        {
-            "question": "When assigned to lead a project, you:",
-            "options": [
-                {"text": "Feel anxious about the responsibility", "value": "Low"},
-                {"text": "Manage but prefer not to lead", "value": "Medium"},
-                {"text": "Feel confident in your ability", "value": "High"}
-            ]
-        },
-        {
-            "question": "Your leadership style is:",
-            "options": [
-                {"text": "Avoid leadership roles", "value": "Low"},
-                {"text": "Lead when necessary", "value": "Medium"},
-                {"text": "Naturally take charge", "value": "High"}
-            ]
-        }
-    ],
-    "Teamwork_Skills": [
-        {
-            "question": "In group projects, you typically:",
-            "options": [
-                {"text": "Work separately on your part", "value": "Low"},
-                {"text": "Coordinate some with teammates", "value": "Medium"},
-                {"text": "Actively collaborate throughout", "value": "High"}
-            ]
-        },
-        {
-            "question": "When a teammate struggles, you:",
-            "options": [
-                {"text": "Focus on your own work", "value": "Low"},
-                {"text": "Help if they ask directly", "value": "Medium"},
-                {"text": "Proactively offer assistance", "value": "High"}
-            ]
-        }
-    ]
-}
+questions = [
+    {
+        "section": "Your Interests",
+        "questions": [
+            {
+                "question": "Which of these fields interests you most?",
+                "options": [
+                    {"text": "Technology (Software, AI, IT)", "value": "Technology"},
+                    {"text": "Business & Finance (Marketing, Banking)", "value": "Business"},
+                    {"text": "Creative Arts (Design, Music, Writing)", "value": "Arts"},
+                    {"text": "Engineering (Mechanical, Electrical)", "value": "Engineering"},
+                    {"text": "Healthcare (Medicine, Nursing)", "value": "Medical"},
+                    {"text": "Science (Physics, Biology, Research)", "value": "Science"},
+                    {"text": "Education (Teaching, Training)", "value": "Education"},
+                    {"text": "Law & Justice (Lawyer, Judge)", "value": "Law"}
+                ],
+                "feature": "Interest"
+            },
+            {
+                "question": "What type of projects excite you?",
+                "options": [
+                    {"text": "Developing new software or apps", "value": "Technology"},
+                    {"text": "Launching a new business/product", "value": "Business"},
+                    {"text": "Creating artistic works", "value": "Arts"},
+                    {"text": "Building physical structures/machines", "value": "Engineering"},
+                    {"text": "Helping people with health issues", "value": "Medical"},
+                    {"text": "Conducting scientific experiments", "value": "Science"},
+                    {"text": "Teaching or mentoring others", "value": "Education"},
+                    {"text": "Arguing cases or solving legal problems", "value": "Law"}
+                ],
+                "feature": "Interest"
+            }
+        ]
+    },
+    {
+        "section": "Work Preferences",
+        "questions": [
+            {
+                "question": "Your ideal work environment is:",
+                "options": [
+                    {"text": "Working alone with clear tasks", "value": "Independent"},
+                    {"text": "Working closely with a team", "value": "Collaborative"},
+                    {"text": "A mix of both with flexibility", "value": "Flexible"}
+                ],
+                "feature": "Work_Style"
+            },
+            {
+                "question": "When facing a complex problem, you:",
+                "options": [
+                    {"text": "Prefer to solve it yourself", "value": "Independent"},
+                    {"text": "Brainstorm with colleagues", "value": "Collaborative"},
+                    {"text": "Depends on the situation", "value": "Flexible"}
+                ],
+                "feature": "Work_Style"
+            }
+        ]
+    },
+    {
+        "section": "Your Skills",
+        "questions": [
+            {
+                "question": "Your strongest skill is:",
+                "options": [
+                    {"text": "Analyzing data and patterns", "value": "Analytical"},
+                    {"text": "Coming up with new ideas", "value": "Creative"},
+                    {"text": "Planning long-term strategies", "value": "Strategic"},
+                    {"text": "Hands-on problem solving", "value": "Practical"}
+                ],
+                "feature": "Strengths"
+            },
+            {
+                "question": "You're particularly good at:",
+                "options": [
+                    {"text": "Math and logical reasoning", "value": "Analytical"},
+                    {"text": "Artistic expression", "value": "Creative"},
+                    {"text": "Seeing the big picture", "value": "Strategic"},
+                    {"text": "Building physical solutions", "value": "Practical"}
+                ],
+                "feature": "Strengths"
+            }
+        ]
+    },
+    {
+        "section": "Communication Style",
+        "questions": [
+            {
+                "question": "How comfortable are you presenting ideas?",
+                "options": [
+                    {"text": "Very uncomfortable", "value": "Low"},
+                    {"text": "Somewhat comfortable", "value": "Medium"},
+                    {"text": "Very comfortable", "value": "High"}
+                ],
+                "feature": "Communication_Skills"
+            },
+            {
+                "question": "In meetings, you typically:",
+                "options": [
+                    {"text": "Rarely speak up", "value": "Low"},
+                    {"text": "Contribute when asked", "value": "Medium"},
+                    {"text": "Frequently share ideas", "value": "High"}
+                ],
+                "feature": "Communication_Skills"
+            }
+        ]
+    },
+    {
+        "section": "Leadership Approach",
+        "questions": [
+            {
+                "question": "When assigned to lead a project, you:",
+                "options": [
+                    {"text": "Feel anxious about the responsibility", "value": "Low"},
+                    {"text": "Manage but prefer not to lead", "value": "Medium"},
+                    {"text": "Feel confident in your ability", "value": "High"}
+                ],
+                "feature": "Leadership_Skills"
+            },
+            {
+                "question": "Your leadership style is:",
+                "options": [
+                    {"text": "Avoid leadership roles", "value": "Low"},
+                    {"text": "Lead when necessary", "value": "Medium"},
+                    {"text": "Naturally take charge", "value": "High"}
+                ],
+                "feature": "Leadership_Skills"
+            }
+        ]
+    },
+    {
+        "section": "Team Dynamics",
+        "questions": [
+            {
+                "question": "In group projects, you typically:",
+                "options": [
+                    {"text": "Work separately on your part", "value": "Low"},
+                    {"text": "Coordinate some with teammates", "value": "Medium"},
+                    {"text": "Actively collaborate throughout", "value": "High"}
+                ],
+                "feature": "Teamwork_Skills"
+            },
+            {
+                "question": "When a teammate struggles, you:",
+                "options": [
+                    {"text": "Focus on your own work", "value": "Low"},
+                    {"text": "Help if they ask directly", "value": "Medium"},
+                    {"text": "Proactively offer assistance", "value": "High"}
+                ],
+                "feature": "Teamwork_Skills"
+            }
+        ]
+    }
+]
 
 direct_input_features = {
-    "GPA": {"type": "number", "min": 0.0, "max": 4.0, "step": 0.1, "default": 3.0},
-    "Years_of_Experience": {"type": "number", "min": 0, "max": 50, "step": 1, "default": 5}
+    "GPA": {"question": "What is your GPA (0.0-4.0)?", "type": "number", "min": 0.0, "max": 4.0, "step": 0.1, "default": 3.0},
+    "Years_of_Experience": {"question": "Years of professional experience:", "type": "number", "min": 0, "max": 50, "step": 1, "default": 5}
 }
 
 # ====================== STREAMLIT APP ======================
@@ -307,7 +337,7 @@ def main():
         with st.expander("Academic & Professional Background"):
             for feature, config in direct_input_features.items():
                 user_responses[feature] = st.number_input(
-                    f"Your {feature.replace('_', ' ')}:",
+                    config["question"],
                     min_value=config["min"],
                     max_value=config["max"],
                     value=config["default"],
@@ -315,18 +345,18 @@ def main():
                 )
         
         # Questionnaire
-        for feature, question_list in questions.items():
-            with st.expander(f"🔹 {feature.replace('_', ' ')}"):
-                for i, question in enumerate(question_list):
+        for section in questions:
+            with st.expander(f"🔹 {section['section']}"):
+                for question in section["questions"]:
                     selected_option = st.radio(
                         question["question"],
                         [opt["text"] for opt in question["options"]],
-                        key=f"{feature}_{i}"
+                        key=f"{question['feature']}_{question['question'][:20]}"
                     )
                     selected_value = question["options"][[opt["text"] for opt in question["options"]].index(selected_option)]["value"]
-                    if feature not in user_responses:
-                        user_responses[feature] = []
-                    user_responses[feature].append(selected_value)
+                    if question["feature"] not in user_responses:
+                        user_responses[question["feature"]] = []
+                    user_responses[question["feature"]].append(selected_value)
         
         # Prediction
         if st.button("🚀 Predict My Career"):
@@ -371,17 +401,26 @@ def main():
                         st.success(f"🎯 **Recommended Career:** {predicted_career}")
                         
                         with st.expander("🔍 Why this recommendation?"):
-                            st.write("The AI considered these key factors:")
+                            st.write("The AI considered these key factors from your responses:")
                             
                             # Get feature importances
                             feat_importances = pd.Series(model.feature_importances_, index=input_data.columns)
                             top_features = feat_importances.sort_values(ascending=False).head(3)
                             
                             for feat in top_features.index:
-                                st.write(f"- **{feat.replace('_', ' ')}** (importance: {top_features[feat]:.2f})")
-                            
-                            st.write("\n**Sample Decision Path:**")
-                            st.code(export_text(model, feature_names=list(input_data.columns)).split('\n')[0])
+                                # Map feature names to user-friendly descriptions
+                                feature_descriptions = {
+                                    "Interest": "Your interests and passions",
+                                    "Work_Style": "Your preferred work environment",
+                                    "Strengths": "Your strongest skills",
+                                    "Communication_Skills": "Your communication style",
+                                    "Leadership_Skills": "Your leadership approach",
+                                    "Teamwork_Skills": "Your teamwork preferences",
+                                    "GPA": "Your academic performance",
+                                    "Years_of_Experience": "Your professional experience"
+                                }
+                                friendly_name = feature_descriptions.get(feat, feat.replace('_', ' '))
+                                st.write(f"- **{friendly_name}** (importance: {top_features[feat]:.2f})")
                     except Exception as e:
                         st.error(f"An error occurred during prediction: {str(e)}")
     
