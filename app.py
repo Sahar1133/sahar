@@ -551,8 +551,6 @@ def main():
     
     with tab1:
         st.header("Career Compatibility Assessment")
-            st.write("---")
-        
         st.write("Answer these questions to discover careers that fit your profile.")
         
         with st.expander("Your Background"):
@@ -575,14 +573,6 @@ def main():
             )
             selected_value = q["options"][[opt["text"] for opt in q["options"]].index(selected_option)]["value"]
             st.session_state.user_responses[q["feature"]] = selected_value
-        
-        # Show restart button at the bottom as well
-        if st.session_state.user_responses:
-            st.write("---")
-            if st.button("🔄 Start New Assessment", key="restart_button_bottom"):
-                st.session_state.user_responses = {}
-                st.session_state.questions = get_randomized_questions()
-                st.rerun()
         
         if st.button("🔮 Find My Career Match"):
             required_fields = list(direct_input_features.keys()) + ['Interest', 'Work_Style', 'Strengths']
@@ -750,3 +740,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+    '
+    
