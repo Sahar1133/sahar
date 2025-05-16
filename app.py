@@ -109,7 +109,6 @@ def load_data():
     
     try:
         data = pd.read_excel("new_updated_data.xlsx")
-        # Ensure we have enough career variety
         if len(data['Predicted_Career_Field'].unique()) < 20:
             data['Predicted_Career_Field'] = np.random.choice(career_options, size=len(data))
     except FileNotFoundError:
@@ -126,7 +125,6 @@ def load_data():
             'Predicted_Career_Field': np.random.choice(career_options, 200)
         })
     
-    # Clean data
     if 'GPA' in data.columns:
         data['GPA'] = pd.to_numeric(data['GPA'], errors='coerce')
         data['GPA'].fillna(data['GPA'].median(), inplace=True)
@@ -173,9 +171,7 @@ model, accuracy = train_model(processed_data)
 
 # ====================== QUESTIONNAIRE ======================
 def get_randomized_questions():
-    # Pool of all possible questions
     all_questions = [
-        # Interest questions
         {
             "question": "Which of these activities excites you most?",
             "options": [
@@ -204,8 +200,6 @@ def get_randomized_questions():
             ],
             "feature": "Interest"
         },
-        
-        # Work style questions
         {
             "question": "How do you prefer to work?",
             "options": [
@@ -224,8 +218,6 @@ def get_randomized_questions():
             ],
             "feature": "Work_Style"
         },
-        
-        # Strengths questions
         {
             "question": "What comes most naturally to you?",
             "options": [
@@ -246,8 +238,6 @@ def get_randomized_questions():
             ],
             "feature": "Strengths"
         },
-        
-        # Communication questions
         {
             "question": "In social situations, you:",
             "options": [
@@ -266,8 +256,6 @@ def get_randomized_questions():
             ],
             "feature": "Communication_Skills"
         },
-        
-        # Leadership questions
         {
             "question": "When a group needs direction, you:",
             "options": [
@@ -286,8 +274,6 @@ def get_randomized_questions():
             ],
             "feature": "Leadership_Skills"
         },
-        
-        # Teamwork questions
         {
             "question": "In group settings, you usually:",
             "options": [
@@ -308,20 +294,16 @@ def get_randomized_questions():
         }
     ]
     
-    # Select 10 random questions (at least 1 from each category)
     feature_categories = list(set([q['feature'] for q in all_questions]))
     selected_questions = []
     
-    # First ensure we have at least one question from each category
     for feature in feature_categories:
         feature_questions = [q for q in all_questions if q['feature'] == feature]
         selected_questions.append(random.choice(feature_questions))
     
-    # Then fill the rest randomly
     remaining_questions = [q for q in all_questions if q not in selected_questions]
     selected_questions.extend(random.sample(remaining_questions, min(10 - len(selected_questions), len(remaining_questions))))
     
-    # Shuffle the final selection
     random.shuffle(selected_questions)
     return selected_questions
 
@@ -337,23 +319,19 @@ def main():
     st.title("🧭 Career Path Finder")
     st.markdown("Discover careers that match your unique strengths and preferences.")
     
-    # Sidebar
     st.sidebar.title("About This Tool")
     st.sidebar.info("This assessment helps match your profile with suitable career options.")
     st.sidebar.write(f"*Based on analysis of {len(data)} career paths*")
     
-    # Initialize user_responses in session state if it doesn't exist
     if 'user_responses' not in st.session_state:
         st.session_state.user_responses = {}
     
-    # Tabs
     tab1, tab2 = st.tabs(["Take Assessment", "Career Insights"])
     
     with tab1:
         st.header("Career Compatibility Assessment")
         st.write("Answer these questions to discover careers that fit your profile.")
         
-        # Direct inputs (GPA, Experience)
         with st.expander("Your Background"):
             for feature, config in direct_input_features.items():
                 st.session_state.user_responses[feature] = st.number_input(
@@ -365,7 +343,6 @@ def main():
                     key=f"num_{feature}"
                 )
         
-        # Randomized questions
         st.subheader("About You")
         questions = get_randomized_questions()
         for i, q in enumerate(questions):
@@ -377,9 +354,7 @@ def main():
             selected_value = q["options"][[opt["text"] for opt in q["options"]].index(selected_option)]["value"]
             st.session_state.user_responses[q["feature"]] = selected_value
         
-        # Prediction
         if st.button("🔮 Find My Career Match"):
-            # Check if we have enough responses (at least GPA and Years_of_Experience plus one other)
             required_fields = list(direct_input_features.keys()) + ['Interest', 'Work_Style', 'Strengths']
             filled_fields = [field for field in required_fields if field in st.session_state.user_responses]
             
@@ -387,10 +362,8 @@ def main():
                 st.warning("Please answer at least 3 questions (including GPA and Experience) for better results.")
             else:
                 with st.spinner("Analyzing your unique profile..."):
-                    # Prepare input data
                     input_data = processed_data.drop('Predicted_Career_Field', axis=1).iloc[0:1].copy()
                     
-                    # Create label encoders for categorical features
                     le_dict = {}
                     for col in data.select_dtypes(include=['object']).columns:
                         if col in data.columns and col != 'Predicted_Career_Field':
@@ -401,18 +374,15 @@ def main():
                     for col in input_data.columns:
                         if col in st.session_state.user_responses:
                             if col in ['Communication_Skills', 'Leadership_Skills', 'Teamwork_Skills']:
-                                # Handle Low/Medium/High scale
                                 level_map = {"Low": 0, "Medium": 1, "High": 2}
                                 input_data[col] = level_map.get(st.session_state.user_responses[col], 1)
                             elif col in le_dict:
-                                # For categorical features
                                 input_data[col] = le_dict[col].transform([st.session_state.user_responses[col]])[0]
-                            else:  # For direct inputs (numerical)
+                            else:
                                 input_data[col] = st.session_state.user_responses[col]
                         else:
                             input_data[col] = processed_data[col].median()
                     
-                    # Make prediction
                     try:
                         prediction = model.predict(input_data)
                         predicted_career = target_le.inverse_transform(prediction)[0]
@@ -422,7 +392,6 @@ def main():
                         with st.expander("💡 Why this career matches you"):
                             st.write("This career aligns well with your profile because of:")
                             
-                            # Get feature importances
                             feat_importances = pd.Series(model.feature_importances_, index=input_data.columns)
                             top_features = feat_importances.sort_values(ascending=False).head(3)
                             
@@ -446,7 +415,7 @@ def main():
                                 else:
                                     importance_desc = f"Your responses about {feat.replace('_', ' ').lower()}"
                                 
-                                st.write(f"- **{importance_desc}** (weight: {top_features[feat]:.2f})"
+                                st.write(f"- **{importance_desc}** (weight: {top_features[feat]:.2f})")
                             
                             st.write("\nThis career path typically requires these characteristics, which match well with your profile.")
                         
@@ -495,9 +464,9 @@ def main():
         )
         
         career_data = data[data['Predicted_Career_Field'] == selected_career]
-              
+        
         if not career_data.empty:
-              st.write(f"- **{importance_desc}** (weight: {top_features[feat]:.2f}
+            st.write(f"**Typical profile for {selected_career}:**")
             cols = st.columns(3)
             with cols[0]:
                 st.metric("Average GPA", f"{career_data['GPA'].mean():.1f}")
