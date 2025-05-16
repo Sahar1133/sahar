@@ -342,6 +342,10 @@ def main():
     st.sidebar.info("This assessment helps match your profile with suitable career options.")
     st.sidebar.write(f"*Based on analysis of {len(data)} career paths*")
     
+    # Initialize user_responses in session state if it doesn't exist
+    if 'user_responses' not in st.session_state:
+        st.session_state.user_responses = {}
+    
     # Tabs
     tab1, tab2 = st.tabs(["Take Assessment", "Career Insights"])
     
@@ -349,17 +353,16 @@ def main():
         st.header("Career Compatibility Assessment")
         st.write("Answer these questions to discover careers that fit your profile.")
         
-        user_responses = {}
-        
         # Direct inputs (GPA, Experience)
         with st.expander("Your Background"):
             for feature, config in direct_input_features.items():
-                user_responses[feature] = st.number_input(
+                st.session_state.user_responses[feature] = st.number_input(
                     config["question"],
                     min_value=config["min"],
                     max_value=config["max"],
                     value=config["default"],
-                    step=config["step"]
+                    step=config["step"],
+                    key=f"num_{feature}"
                 )
         
         # Randomized questions
@@ -372,14 +375,16 @@ def main():
                 key=f"q_{i}"
             )
             selected_value = q["options"][[opt["text"] for opt in q["options"]].index(selected_option)]["value"]
-            if q["feature"] not in user_responses:
-                user_responses[q["feature"]] = []
-            user_responses[q["feature"]].append(selected_value)
+            st.session_state.user_responses[q["feature"]] = selected_value
         
         # Prediction
         if st.button("🔮 Find My Career Match"):
-            if len(user_responses) < 3:
-                st.warning("Please answer more questions for better results.")
+            # Check if we have enough responses (at least GPA and Years_of_Experience plus one other)
+            required_fields = list(direct_input_features.keys()) + ['Interest', 'Work_Style', 'Strengths']
+            filled_fields = [field for field in required_fields if field in st.session_state.user_responses]
+            
+            if len(filled_fields) < 3:
+                st.warning("Please answer at least 3 questions (including GPA and Experience) for better results.")
             else:
                 with st.spinner("Analyzing your unique profile..."):
                     # Prepare input data
@@ -394,19 +399,16 @@ def main():
                             le_dict[col] = le
                     
                     for col in input_data.columns:
-                        if col in user_responses:
-                            if isinstance(user_responses[col], list):  # For question-based features
-                                if col in ['Communication_Skills', 'Leadership_Skills', 'Teamwork_Skills']:
-                                    # Handle Low/Medium/High scale
-                                    level_map = {"Low": 0, "Medium": 1, "High": 2}
-                                    avg_level = np.mean([level_map[val] for val in user_responses[col]])
-                                    input_data[col] = avg_level
-                                else:
-                                    # For other categorical features, take the first response and encode it
-                                    if col in le_dict:
-                                        input_data[col] = le_dict[col].transform([user_responses[col][0]])[0]
+                        if col in st.session_state.user_responses:
+                            if col in ['Communication_Skills', 'Leadership_Skills', 'Teamwork_Skills']:
+                                # Handle Low/Medium/High scale
+                                level_map = {"Low": 0, "Medium": 1, "High": 2}
+                                input_data[col] = level_map.get(st.session_state.user_responses[col], 1)
+                            elif col in le_dict:
+                                # For categorical features
+                                input_data[col] = le_dict[col].transform([st.session_state.user_responses[col]])[0]
                             else:  # For direct inputs (numerical)
-                                input_data[col] = user_responses[col]
+                                input_data[col] = st.session_state.user_responses[col]
                         else:
                             input_data[col] = processed_data[col].median()
                     
@@ -427,19 +429,19 @@ def main():
                             for feat in top_features.index:
                                 importance_desc = ""
                                 if feat == "Interest":
-                                    interest_val = user_responses.get("Interest", ["Various"])[0]
+                                    interest_val = st.session_state.user_responses.get("Interest", "Various")
                                     importance_desc = f"Your strong interest in {interest_val} fields"
                                 elif feat == "Work_Style":
-                                    style_val = user_responses.get("Work_Style", ["Various"])[0]
+                                    style_val = st.session_state.user_responses.get("Work_Style", "Various")
                                     importance_desc = f"Your preference for {style_val.lower()} work environments"
                                 elif feat == "Strengths":
-                                    strength_val = user_responses.get("Strengths", ["Various"])[0]
+                                    strength_val = st.session_state.user_responses.get("Strengths", "Various")
                                     importance_desc = f"Your {strength_val.lower()} strengths"
                                 elif feat == "GPA":
-                                    gpa_val = user_responses.get("GPA", 3.0)
+                                    gpa_val = st.session_state.user_responses.get("GPA", 3.0)
                                     importance_desc = f"Your academic performance (GPA: {gpa_val})"
                                 elif feat == "Years_of_Experience":
-                                    exp_val = user_responses.get("Years_of_Experience", 0)
+                                    exp_val = st.session_state.user_responses.get("Years_of_Experience", 0)
                                     importance_desc = f"Your professional experience ({exp_val} years)"
                                 else:
                                     importance_desc = f"Your responses about {feat.replace('_', ' ').lower()}"
@@ -468,7 +470,7 @@ def main():
                                 st.write("No additional information available for this career in our dataset.")
                         
                     except Exception as e:
-                        st.error("We encountered an issue analyzing your profile. Please try again.")
+                        st.error(f"We encountered an issue analyzing your profile. Error: {str(e)}")
     
     with tab2:
         st.header("📊 Career Insights")
@@ -488,7 +490,8 @@ def main():
         st.subheader("Career Characteristics")
         selected_career = st.selectbox(
             "Select a career to learn more:",
-            sorted(data['Predicted_Career_Field'].unique())
+            sorted(data['Predicted_Career_Field'].unique()),
+            key="career_select"
         )
         
         career_data = data[data['Predicted_Career_Field'] == selected_career]
