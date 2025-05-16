@@ -497,7 +497,7 @@ def main():
         career_data = data[data['Predicted_Career_Field'] == selected_career]
               
         if not career_data.empty:
-              st.write(f"- **{importance_desc}** (weight: {top_features[feat]:.2f})")
+              st.write(f"- **{importance_desc}** (weight: {top_features[feat]:.2f}))
             cols = st.columns(3)
             with cols[0]:
                 st.metric("Average GPA", f"{career_data['GPA'].mean():.1f}")
