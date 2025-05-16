@@ -376,94 +376,65 @@ def main():
                 user_responses[q["feature"]] = []
             user_responses[q["feature"]].append(selected_value)
         
-        # Prediction
-        if st.button("🔮 Find My Career Matches"):
-            if len(user_responses) < 3:
-                st.warning("Please answer more questions for better results.")
-            else:
-                with st.spinner("Analyzing your unique profile..."):
-                    # Prepare input data
-                    input_data = processed_data.drop('Predicted_Career_Field', axis=1).iloc[0:1].copy()
-                    
-                    # Create label encoders for categorical features
-                    le_dict = {}
-                    for col in data.select_dtypes(include=['object']).columns:
-                        if col in data.columns and col != 'Predicted_Career_Field':
-                            le = LabelEncoder()
-                            le.fit(data[col].astype(str))
-                            le_dict[col] = le
-                    
-                    for col in input_data.columns:
-                        if col in user_responses:
-                            if isinstance(user_responses[col], list):  # For question-based features
-                                if col in ['Communication_Skills', 'Leadership_Skills', 'Teamwork_Skills']:
-                                    # Handle Low/Medium/High scale
-                                    level_map = {"Low": 0, "Medium": 1, "High": 2}
-                                    avg_level = np.mean([level_map[val] for val in user_responses[col]])
-                                    input_data[col] = avg_level
-                                else:
-                                    # For other categorical features, take the first response and encode it
-                                    if col in le_dict:
-                                        input_data[col] = le_dict[col].transform([user_responses[col][0]])[0]
-                            else:  # For direct inputs (numerical)
-                                input_data[col] = user_responses[col]
-                        else:
-                            input_data[col] = processed_data[col].median()
-                    
-                    # Make prediction
-                    try:
-                        prediction = model.predict(input_data)
-                        predicted_career = target_le.inverse_transform(prediction)[0]
-                        
-                        # Get top 3 predictions
-                        proba = model.predict_proba(input_data)[0]
-                        top3_indices = np.argsort(proba)[-3:][::-1]
-                        top3_careers = target_le.inverse_transform(top3_indices)
-                        top3_probs = proba[top3_indices]
-                        
-                        st.success("### Your Top Career Matches")
-                        
-                        cols = st.columns(3)
-                        for i, (career, prob) in enumerate(zip(top3_careers, top3_probs)):
-                            with cols[i]:
-                                st.metric(
-                                    label=f"{i+1}. {career}",
-                                    value=f"{prob*100:.1f}% match"
-                                )
-                        
-                        with st.expander("💡 What makes these good matches?"):
-                            st.write("These careers align with:")
-                            
-                            # Get feature importances
-                            feat_importances = pd.Series(model.feature_importances_, index=input_data.columns)
-                            top_features = feat_importances.sort_values(ascending=False).head(3)
-                            
-                            for feat in top_features.index:
-                                importance_desc = ""
-                                if feat == "Interest":
-                                    interest_val = user_responses.get("Interest", ["Various"])[0]
-                                    importance_desc = f"your interest in {interest_val} fields"
-                                elif feat == "Work_Style":
-                                    style_val = user_responses.get("Work_Style", ["Various"])[0]
-                                    importance_desc = f"your preference for {style_val.lower()} work"
-                                elif feat == "Strengths":
-                                    strength_val = user_responses.get("Strengths", ["Various"])[0]
-                                    importance_desc = f"your {strength_val.lower()} strengths"
-                                elif feat == "GPA":
-                                    gpa_val = user_responses.get("GPA", 3.0)
-                                    importance_desc = f"your academic performance (GPA: {gpa_val})"
-                                elif feat == "Years_of_Experience":
-                                    exp_val = user_responses.get("Years_of_Experience", 0)
-                                    importance_desc = f"your professional experience ({exp_val} years)"
-                                else:
-                                    importance_desc = f"your responses about {feat.replace('_', ' ').lower()}"
-                                
-                                st.write(f"- **{importance_desc}** (weight: {top_features[feat]:.2f})")
-                            
-                            st.write("\nThe assessment considers multiple factors to find careers that align with your unique combination of skills, interests, and preferences.")
-                        
-                    except Exception as e:
-                        st.error("We encountered an issue analyzing your profile. Please try again.")
+       # ====================== PREDICTION SECTION (updated for single career) ======================
+if st.button("🔮 Find My Career Match"):
+    if len(user_responses) < 3:
+        st.warning("Please answer more questions for better results.")
+    else:
+        with st.spinner("Discovering your perfect career..."):
+            # ... [data preparation remains the same] ...
+            
+            # Get SINGLE prediction
+            prediction = model.predict(input_data)
+            predicted_career = target_le.inverse_transform(prediction)[0]
+            
+            # Get prediction probability
+            proba = model.predict_proba(input_data)[0]
+            confidence = np.max(proba) * 100
+            
+            # Display single result with confidence
+            st.markdown(f"""
+            <div style='
+                background: linear-gradient(135deg, #f5f7fa, #e4e8f0);
+                border-radius: 12px;
+                padding: 25px;
+                margin: 20px 0;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                text-align: center;
+            '>
+                <h2 style='color:#4a6cf7;'>Your Perfect Career Match</h2>
+                <h1 style='margin: 20px 0;'>{predicted_career}</h1>
+                <p style='font-size: 18px;'>Confidence: <strong>{confidence:.1f}%</strong></p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Simplified explanation
+            with st.expander("🔍 Why this match?"):
+                # Get most important feature
+                feat_importance = pd.Series(
+                    model.feature_importances_, 
+                    index=input_data.columns
+                ).sort_values(ascending=False)
+                
+                top_feature = feat_importance.index[0]
+                top_value = user_responses.get(top_feature, ["your responses"])[0]
+                
+                # Human-readable explanations
+                explanations = {
+                    "Interest": f"Your passion for <strong>{top_value}</strong> related work",
+                    "Work_Style": f"Your preference for <strong>{top_value.lower()}</strong> environments",
+                    "Strengths": f"Your <strong>{top_value.lower()}</strong> abilities",
+                    "GPA": f"Your academic performance (GPA: <strong>{user_responses.get('GPA', 3.0)}</strong>)",
+                    "Years_of_Experience": f"Your experience level (<strong>{user_responses.get('Years_of_Experience', 0)} years</strong>)"
+                }
+                
+                st.markdown(f"""
+                <p>This career matches:</p>
+                <ul>
+                    <li>{explanations.get(top_feature, 'Your unique profile characteristics')}</li>
+                    <li>{len([x for x in feat_importance if x > 0.1])} other key factors from your assessment</li>
+                </ul>
+                """, unsafe_allow_html=True)
     
     with tab2:
         st.header("📊 Career Insights")
