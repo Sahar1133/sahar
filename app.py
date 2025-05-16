@@ -594,4 +594,4 @@ def main():
                 st.metric("Common Interest", career_data['Interest'].mode()[0])
 
 if __name__ == "__main__":
-    main()         this is code
+    main()     
