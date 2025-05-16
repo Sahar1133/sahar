@@ -486,31 +486,34 @@ def get_all_questions():
         }
     ]
 
+import random
+
 @st.cache_data
 def get_randomized_questions():
-    """Selects 10 random questions from the pool of 20"""
-    all_questions = get_all_questions()
-    features = list(set(q['feature'] for q in all_questions))
+    """Selects 10 random questions from the pool of 20."""
+    all_questions = get_all_questions()  # assuming this returns a list of questions
+    features = list(set(q['feature'] for q in all_questions))  # Features represent different categories
     selected = []
-    
+
     # First pick one from each feature category
     for feature in features:
         feature_questions = [q for q in all_questions if q['feature'] == feature]
         if feature_questions:
             selected.append(random.choice(feature_questions))
-    
+
     # Remove selected questions from the pool
     remaining = [q for q in all_questions if q not in selected]
-    
+
     # Calculate how many more we need to reach 10
     needed = 10 - len(selected)
-    
+
     # Only sample if we have remaining questions and need more
     if needed > 0 and remaining:
         selected.extend(random.sample(remaining, min(needed, len(remaining))))
-    
+
     random.shuffle(selected)
     return selected
+
 
 direct_input_features = {
     "GPA": {
