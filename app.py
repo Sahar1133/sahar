@@ -6,11 +6,12 @@ from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score
+import random
 
 # ====================== STYLING & SETUP ======================
 st.set_page_config(
-    page_title="AI Career Predictor",
-    page_icon="🧠",
+    page_title="Career Path Finder",
+    page_icon="🧭",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -83,30 +84,46 @@ def apply_custom_css():
 # ====================== DATA LOADING & PREPROCESSING ======================
 @st.cache_data
 def load_data():
-    # If CSV not found, use demo data
+    # Expanded career options
+    career_options = [
+        'Software Developer', 'Data Scientist', 'AI Engineer', 
+        'Cybersecurity Specialist', 'Cloud Architect',
+        'Marketing Manager', 'Financial Analyst', 'HR Manager',
+        'Entrepreneur', 'Investment Banker',
+        'Graphic Designer', 'Video Editor', 'Music Producer',
+        'Creative Writer', 'Art Director',
+        'Mechanical Engineer', 'Electrical Engineer', 
+        'Civil Engineer', 'Robotics Engineer',
+        'Doctor', 'Nurse', 'Psychologist', 
+        'Physical Therapist', 'Medical Researcher',
+        'Biotechnologist', 'Research Scientist', 
+        'Environmental Scientist', 'Physicist',
+        'Teacher', 'Professor', 'Educational Consultant',
+        'Curriculum Developer',
+        'Lawyer', 'Judge', 'Legal Consultant',
+        'UX Designer', 'Product Manager',
+        'Journalist', 'Public Relations Specialist',
+        'Architect', 'Urban Planner',
+        'Chef', 'Event Planner', 'Fashion Designer'
+    ]
+    
     try:
         data = pd.read_excel("new_updated_data.xlsx")
+        # Ensure we have enough career variety
+        if len(data['Predicted_Career_Field'].unique()) < 20:
+            data['Predicted_Career_Field'] = np.random.choice(career_options, size=len(data))
     except FileNotFoundError:
         st.warning("⚠️ Dataset not found. Using demo data.")
         data = pd.DataFrame({
-            'Interest': ['Technology', 'Business', 'Arts', 'Engineering', 'Medical', 'Science', 'Education', 'Law'],
-            'Work_Style': ['Independent', 'Collaborative', 'Flexible', 'Independent', 'Collaborative', 'Flexible', 'Collaborative', 'Independent'],
-            'Strengths': ['Analytical', 'Creative', 'Strategic', 'Practical', 'Analytical', 'Analytical', 'Creative', 'Strategic'],
-            'Communication_Skills': ['Medium', 'High', 'Low', 'Medium', 'High', 'High', 'High', 'High'],
-            'Leadership_Skills': ['Medium', 'High', 'Low', 'Medium', 'High', 'Medium', 'High', 'High'],
-            'Teamwork_Skills': ['High', 'Medium', 'Low', 'High', 'Medium', 'High', 'High', 'Medium'],
-            'GPA': [3.5, 3.8, 3.2, 3.9, 3.6, 3.7, 3.4, 3.9],
-            'Years_of_Experience': [5, 10, 2, 8, 12, 6, 9, 15],
-            'Predicted_Career_Field': [
-                'Software Developer', 
-                'Marketing Manager', 
-                'Graphic Designer',
-                'Data Scientist',
-                'Doctor',
-                'Research Scientist',
-                'Teacher/Professor',
-                'Lawyer'
-            ]
+            'Interest': np.random.choice(['Technology', 'Business', 'Arts', 'Engineering', 'Medical', 'Science', 'Education', 'Law'], 200),
+            'Work_Style': np.random.choice(['Independent', 'Collaborative', 'Flexible'], 200),
+            'Strengths': np.random.choice(['Analytical', 'Creative', 'Strategic', 'Practical'], 200),
+            'Communication_Skills': np.random.choice(['Low', 'Medium', 'High'], 200),
+            'Leadership_Skills': np.random.choice(['Low', 'Medium', 'High'], 200),
+            'Teamwork_Skills': np.random.choice(['Low', 'Medium', 'High'], 200),
+            'GPA': np.round(np.random.uniform(2.0, 4.0, 200), 1),
+            'Years_of_Experience': np.random.randint(0, 20, 200),
+            'Predicted_Career_Field': np.random.choice(career_options, 200)
         })
     
     # Clean data
@@ -121,7 +138,6 @@ data = load_data()
 # ====================== MODEL TRAINING ======================
 def preprocess_data(data):
     le = LabelEncoder()
-    # Only encode columns that exist in the dataframe and are object type
     object_cols = [col for col in data.select_dtypes(include=['object']).columns 
                   if col in data.columns]
     
@@ -137,7 +153,7 @@ processed_data, target_le = preprocess_data(data.copy())
 
 def train_model(data):
     if 'Predicted_Career_Field' not in data.columns:
-        st.error("Target column 'Predicted_Career_Field' not found in data")
+        st.error("Target column not found in data")
         return None, 0
     
     X = data.drop('Predicted_Career_Field', axis=1)
@@ -156,185 +172,187 @@ def train_model(data):
 model, accuracy = train_model(processed_data)
 
 # ====================== QUESTIONNAIRE ======================
-questions = [
-    {
-        "section": "Your Interests",
-        "questions": [
-            {
-                "question": "Which of these fields interests you most?",
-                "options": [
-                    {"text": "Technology (Software, AI, IT)", "value": "Technology"},
-                    {"text": "Business & Finance (Marketing, Banking)", "value": "Business"},
-                    {"text": "Creative Arts (Design, Music, Writing)", "value": "Arts"},
-                    {"text": "Engineering (Mechanical, Electrical)", "value": "Engineering"},
-                    {"text": "Healthcare (Medicine, Nursing)", "value": "Medical"},
-                    {"text": "Science (Physics, Biology, Research)", "value": "Science"},
-                    {"text": "Education (Teaching, Training)", "value": "Education"},
-                    {"text": "Law & Justice (Lawyer, Judge)", "value": "Law"}
-                ],
-                "feature": "Interest"
-            },
-            {
-                "question": "What type of projects excite you?",
-                "options": [
-                    {"text": "Developing new software or apps", "value": "Technology"},
-                    {"text": "Launching a new business/product", "value": "Business"},
-                    {"text": "Creating artistic works", "value": "Arts"},
-                    {"text": "Building physical structures/machines", "value": "Engineering"},
-                    {"text": "Helping people with health issues", "value": "Medical"},
-                    {"text": "Conducting scientific experiments", "value": "Science"},
-                    {"text": "Teaching or mentoring others", "value": "Education"},
-                    {"text": "Arguing cases or solving legal problems", "value": "Law"}
-                ],
-                "feature": "Interest"
-            }
-        ]
-    },
-    {
-        "section": "Work Preferences",
-        "questions": [
-            {
-                "question": "Your ideal work environment is:",
-                "options": [
-                    {"text": "Working alone with clear tasks", "value": "Independent"},
-                    {"text": "Working closely with a team", "value": "Collaborative"},
-                    {"text": "A mix of both with flexibility", "value": "Flexible"}
-                ],
-                "feature": "Work_Style"
-            },
-            {
-                "question": "When facing a complex problem, you:",
-                "options": [
-                    {"text": "Prefer to solve it yourself", "value": "Independent"},
-                    {"text": "Brainstorm with colleagues", "value": "Collaborative"},
-                    {"text": "Depends on the situation", "value": "Flexible"}
-                ],
-                "feature": "Work_Style"
-            }
-        ]
-    },
-    {
-        "section": "Your Skills",
-        "questions": [
-            {
-                "question": "Your strongest skill is:",
-                "options": [
-                    {"text": "Analyzing data and patterns", "value": "Analytical"},
-                    {"text": "Coming up with new ideas", "value": "Creative"},
-                    {"text": "Planning long-term strategies", "value": "Strategic"},
-                    {"text": "Hands-on problem solving", "value": "Practical"}
-                ],
-                "feature": "Strengths"
-            },
-            {
-                "question": "You're particularly good at:",
-                "options": [
-                    {"text": "Math and logical reasoning", "value": "Analytical"},
-                    {"text": "Artistic expression", "value": "Creative"},
-                    {"text": "Seeing the big picture", "value": "Strategic"},
-                    {"text": "Building physical solutions", "value": "Practical"}
-                ],
-                "feature": "Strengths"
-            }
-        ]
-    },
-    {
-        "section": "Communication Style",
-        "questions": [
-            {
-                "question": "How comfortable are you presenting ideas?",
-                "options": [
-                    {"text": "Very uncomfortable", "value": "Low"},
-                    {"text": "Somewhat comfortable", "value": "Medium"},
-                    {"text": "Very comfortable", "value": "High"}
-                ],
-                "feature": "Communication_Skills"
-            },
-            {
-                "question": "In meetings, you typically:",
-                "options": [
-                    {"text": "Rarely speak up", "value": "Low"},
-                    {"text": "Contribute when asked", "value": "Medium"},
-                    {"text": "Frequently share ideas", "value": "High"}
-                ],
-                "feature": "Communication_Skills"
-            }
-        ]
-    },
-    {
-        "section": "Leadership Approach",
-        "questions": [
-            {
-                "question": "When assigned to lead a project, you:",
-                "options": [
-                    {"text": "Feel anxious about the responsibility", "value": "Low"},
-                    {"text": "Manage but prefer not to lead", "value": "Medium"},
-                    {"text": "Feel confident in your ability", "value": "High"}
-                ],
-                "feature": "Leadership_Skills"
-            },
-            {
-                "question": "Your leadership style is:",
-                "options": [
-                    {"text": "Avoid leadership roles", "value": "Low"},
-                    {"text": "Lead when necessary", "value": "Medium"},
-                    {"text": "Naturally take charge", "value": "High"}
-                ],
-                "feature": "Leadership_Skills"
-            }
-        ]
-    },
-    {
-        "section": "Team Dynamics",
-        "questions": [
-            {
-                "question": "In group projects, you typically:",
-                "options": [
-                    {"text": "Work separately on your part", "value": "Low"},
-                    {"text": "Coordinate some with teammates", "value": "Medium"},
-                    {"text": "Actively collaborate throughout", "value": "High"}
-                ],
-                "feature": "Teamwork_Skills"
-            },
-            {
-                "question": "When a teammate struggles, you:",
-                "options": [
-                    {"text": "Focus on your own work", "value": "Low"},
-                    {"text": "Help if they ask directly", "value": "Medium"},
-                    {"text": "Proactively offer assistance", "value": "High"}
-                ],
-                "feature": "Teamwork_Skills"
-            }
-        ]
-    }
-]
+def get_randomized_questions():
+    # Pool of all possible questions
+    all_questions = [
+        # Interest questions
+        {
+            "question": "Which of these activities excites you most?",
+            "options": [
+                {"text": "Coding or working with technology", "value": "Technology"},
+                {"text": "Analyzing market trends", "value": "Business"},
+                {"text": "Creating art or designs", "value": "Arts"},
+                {"text": "Building or fixing mechanical things", "value": "Engineering"},
+                {"text": "Helping people with health issues", "value": "Medical"},
+                {"text": "Conducting experiments", "value": "Science"},
+                {"text": "Teaching others", "value": "Education"},
+                {"text": "Debating or solving legal problems", "value": "Law"}
+            ],
+            "feature": "Interest"
+        },
+        {
+            "question": "What type of books/movies do you enjoy most?",
+            "options": [
+                {"text": "Sci-fi and technology", "value": "Technology"},
+                {"text": "Business success stories", "value": "Business"},
+                {"text": "Creative arts and design", "value": "Arts"},
+                {"text": "How things work", "value": "Engineering"},
+                {"text": "Medical dramas", "value": "Medical"},
+                {"text": "Scientific discoveries", "value": "Science"},
+                {"text": "Educational content", "value": "Education"},
+                {"text": "Courtroom dramas", "value": "Law"}
+            ],
+            "feature": "Interest"
+        },
+        
+        # Work style questions
+        {
+            "question": "How do you prefer to work?",
+            "options": [
+                {"text": "Alone with clear tasks", "value": "Independent"},
+                {"text": "In a team environment", "value": "Collaborative"},
+                {"text": "A flexible mix of both", "value": "Flexible"}
+            ],
+            "feature": "Work_Style"
+        },
+        {
+            "question": "Your ideal project would involve:",
+            "options": [
+                {"text": "Working independently on your part", "value": "Independent"},
+                {"text": "Constant collaboration with others", "value": "Collaborative"},
+                {"text": "Some teamwork with independent phases", "value": "Flexible"}
+            ],
+            "feature": "Work_Style"
+        },
+        
+        # Strengths questions
+        {
+            "question": "What comes most naturally to you?",
+            "options": [
+                {"text": "Solving complex problems", "value": "Analytical"},
+                {"text": "Coming up with creative ideas", "value": "Creative"},
+                {"text": "Planning long-term strategies", "value": "Strategic"},
+                {"text": "Building practical solutions", "value": "Practical"}
+            ],
+            "feature": "Strengths"
+        },
+        {
+            "question": "Others would describe you as:",
+            "options": [
+                {"text": "Logical and detail-oriented", "value": "Analytical"},
+                {"text": "Imaginative and original", "value": "Creative"},
+                {"text": "Visionary and forward-thinking", "value": "Strategic"},
+                {"text": "Hands-on and resourceful", "value": "Practical"}
+            ],
+            "feature": "Strengths"
+        },
+        
+        # Communication questions
+        {
+            "question": "In social situations, you:",
+            "options": [
+                {"text": "Prefer listening to speaking", "value": "Low"},
+                {"text": "Speak when you have something to say", "value": "Medium"},
+                {"text": "Easily engage in conversations", "value": "High"}
+            ],
+            "feature": "Communication_Skills"
+        },
+        {
+            "question": "When explaining something complex, you:",
+            "options": [
+                {"text": "Struggle to put it in simple terms", "value": "Low"},
+                {"text": "Can explain if you prepare", "value": "Medium"},
+                {"text": "Naturally simplify complex ideas", "value": "High"}
+            ],
+            "feature": "Communication_Skills"
+        },
+        
+        # Leadership questions
+        {
+            "question": "When a group needs direction, you:",
+            "options": [
+                {"text": "Wait for someone else to step up", "value": "Low"},
+                {"text": "Help if no one else does", "value": "Medium"},
+                {"text": "Naturally take the lead", "value": "High"}
+            ],
+            "feature": "Leadership_Skills"
+        },
+        {
+            "question": "Your approach to responsibility is:",
+            "options": [
+                {"text": "Avoid taking charge", "value": "Low"},
+                {"text": "Take charge when needed", "value": "Medium"},
+                {"text": "Seek leadership roles", "value": "High"}
+            ],
+            "feature": "Leadership_Skills"
+        },
+        
+        # Teamwork questions
+        {
+            "question": "In group settings, you usually:",
+            "options": [
+                {"text": "Focus on your individual tasks", "value": "Low"},
+                {"text": "Coordinate when necessary", "value": "Medium"},
+                {"text": "Actively collaborate with others", "value": "High"}
+            ],
+            "feature": "Teamwork_Skills"
+        },
+        {
+            "question": "When a teammate needs help, you:",
+            "options": [
+                {"text": "Let them figure it out", "value": "Low"},
+                {"text": "Help if they ask", "value": "Medium"},
+                {"text": "Proactively offer assistance", "value": "High"}
+            ],
+            "feature": "Teamwork_Skills"
+        }
+    ]
+    
+    # Select 10 random questions (at least 1 from each category)
+    feature_categories = list(set([q['feature'] for q in all_questions]))
+    selected_questions = []
+    
+    # First ensure we have at least one question from each category
+    for feature in feature_categories:
+        feature_questions = [q for q in all_questions if q['feature'] == feature]
+        selected_questions.append(random.choice(feature_questions))
+    
+    # Then fill the rest randomly
+    remaining_questions = [q for q in all_questions if q not in selected_questions]
+    selected_questions.extend(random.sample(remaining_questions, min(10 - len(selected_questions), len(remaining_questions))))
+    
+    # Shuffle the final selection
+    random.shuffle(selected_questions)
+    return selected_questions
 
 direct_input_features = {
-    "GPA": {"question": "What is your GPA (0.0-4.0)?", "type": "number", "min": 0.0, "max": 4.0, "step": 0.1, "default": 3.0},
-    "Years_of_Experience": {"question": "Years of professional experience:", "type": "number", "min": 0, "max": 50, "step": 1, "default": 5}
+    "GPA": {"question": "What is your approximate GPA (0.0-4.0)?", "type": "number", "min": 0.0, "max": 4.0, "step": 0.1, "default": 3.0},
+    "Years_of_Experience": {"question": "Years of professional experience (if any):", "type": "number", "min": 0, "max": 50, "step": 1, "default": 0}
 }
 
 # ====================== STREAMLIT APP ======================
 def main():
     apply_custom_css()
     
-    st.title("🧠 AI Career Prediction System")
-    st.markdown("Discover your ideal career path based on your skills and preferences.")
+    st.title("🧭 Career Path Finder")
+    st.markdown("Discover careers that match your unique strengths and preferences.")
     
     # Sidebar
-    st.sidebar.title("About")
-    st.sidebar.info("This tool uses machine learning to match your profile with suitable careers.")
-    st.sidebar.write(f"Model Accuracy: **{accuracy:.1%}**")
+    st.sidebar.title("About This Tool")
+    st.sidebar.info("This assessment helps match your profile with suitable career options.")
+    st.sidebar.write(f"*Based on analysis of {len(data)} career paths*")
     
     # Tabs
-    tab1, tab2 = st.tabs(["Career Prediction", "Data Insights"])
+    tab1, tab2 = st.tabs(["Take Assessment", "Career Insights"])
     
     with tab1:
-        st.header("📝 Career Assessment")
+        st.header("Career Compatibility Assessment")
+        st.write("Answer these questions to discover careers that fit your profile.")
+        
         user_responses = {}
         
         # Direct inputs (GPA, Experience)
-        with st.expander("Academic & Professional Background"):
+        with st.expander("Your Background"):
             for feature, config in direct_input_features.items():
                 user_responses[feature] = st.number_input(
                     config["question"],
@@ -344,26 +362,26 @@ def main():
                     step=config["step"]
                 )
         
-        # Questionnaire
-        for section in questions:
-            with st.expander(f"🔹 {section['section']}"):
-                for question in section["questions"]:
-                    selected_option = st.radio(
-                        question["question"],
-                        [opt["text"] for opt in question["options"]],
-                        key=f"{question['feature']}_{question['question'][:20]}"
-                    )
-                    selected_value = question["options"][[opt["text"] for opt in question["options"]].index(selected_option)]["value"]
-                    if question["feature"] not in user_responses:
-                        user_responses[question["feature"]] = []
-                    user_responses[question["feature"]].append(selected_value)
+        # Randomized questions
+        st.subheader("About You")
+        questions = get_randomized_questions()
+        for i, q in enumerate(questions):
+            selected_option = st.radio(
+                q["question"],
+                [opt["text"] for opt in q["options"]],
+                key=f"q_{i}"
+            )
+            selected_value = q["options"][[opt["text"] for opt in q["options"]].index(selected_option)]["value"]
+            if q["feature"] not in user_responses:
+                user_responses[q["feature"]] = []
+            user_responses[q["feature"]].append(selected_value)
         
         # Prediction
-        if st.button("🚀 Predict My Career"):
+        if st.button("🔮 Find My Career Matches"):
             if len(user_responses) < 3:
-                st.warning("Please answer more questions for better accuracy.")
+                st.warning("Please answer more questions for better results.")
             else:
-                with st.spinner("Analyzing your profile..."):
+                with st.spinner("Analyzing your unique profile..."):
                     # Prepare input data
                     input_data = processed_data.drop('Predicted_Career_Field', axis=1).iloc[0:1].copy()
                     
@@ -397,45 +415,88 @@ def main():
                         prediction = model.predict(input_data)
                         predicted_career = target_le.inverse_transform(prediction)[0]
                         
-                        # Explain prediction
-                        st.success(f"🎯 **Recommended Career:** {predicted_career}")
+                        # Get top 3 predictions
+                        proba = model.predict_proba(input_data)[0]
+                        top3_indices = np.argsort(proba)[-3:][::-1]
+                        top3_careers = target_le.inverse_transform(top3_indices)
+                        top3_probs = proba[top3_indices]
                         
-                        with st.expander("🔍 Why this recommendation?"):
-                            st.write("The AI considered these key factors from your responses:")
+                        st.success("### Your Top Career Matches")
+                        
+                        cols = st.columns(3)
+                        for i, (career, prob) in enumerate(zip(top3_careers, top3_probs)):
+                            with cols[i]:
+                                st.metric(
+                                    label=f"{i+1}. {career}",
+                                    value=f"{prob*100:.1f}% match"
+                                )
+                        
+                        with st.expander("💡 What makes these good matches?"):
+                            st.write("These careers align with:")
                             
                             # Get feature importances
                             feat_importances = pd.Series(model.feature_importances_, index=input_data.columns)
                             top_features = feat_importances.sort_values(ascending=False).head(3)
                             
                             for feat in top_features.index:
-                                # Map feature names to user-friendly descriptions
-                                feature_descriptions = {
-                                    "Interest": "Your interests and passions",
-                                    "Work_Style": "Your preferred work environment",
-                                    "Strengths": "Your strongest skills",
-                                    "Communication_Skills": "Your communication style",
-                                    "Leadership_Skills": "Your leadership approach",
-                                    "Teamwork_Skills": "Your teamwork preferences",
-                                    "GPA": "Your academic performance",
-                                    "Years_of_Experience": "Your professional experience"
-                                }
-                                friendly_name = feature_descriptions.get(feat, feat.replace('_', ' '))
-                                st.write(f"- **{friendly_name}** (importance: {top_features[feat]:.2f})")
+                                importance_desc = ""
+                                if feat == "Interest":
+                                    interest_val = user_responses.get("Interest", ["Various"])[0]
+                                    importance_desc = f"your interest in {interest_val} fields"
+                                elif feat == "Work_Style":
+                                    style_val = user_responses.get("Work_Style", ["Various"])[0]
+                                    importance_desc = f"your preference for {style_val.lower()} work"
+                                elif feat == "Strengths":
+                                    strength_val = user_responses.get("Strengths", ["Various"])[0]
+                                    importance_desc = f"your {strength_val.lower()} strengths"
+                                elif feat == "GPA":
+                                    gpa_val = user_responses.get("GPA", 3.0)
+                                    importance_desc = f"your academic performance (GPA: {gpa_val})"
+                                elif feat == "Years_of_Experience":
+                                    exp_val = user_responses.get("Years_of_Experience", 0)
+                                    importance_desc = f"your professional experience ({exp_val} years)"
+                                else:
+                                    importance_desc = f"your responses about {feat.replace('_', ' ').lower()}"
+                                
+                                st.write(f"- **{importance_desc}** (weight: {top_features[feat]:.2f})")
+                            
+                            st.write("\nThe assessment considers multiple factors to find careers that align with your unique combination of skills, interests, and preferences.")
+                        
                     except Exception as e:
-                        st.error(f"An error occurred during prediction: {str(e)}")
+                        st.error("We encountered an issue analyzing your profile. Please try again.")
     
     with tab2:
-        st.header("📊 Dataset Insights")
-        st.write("Explore the data used for predictions.")
+        st.header("📊 Career Insights")
+        st.write("Explore different career paths and their characteristics.")
         
-        if st.checkbox("Show raw data"):
-            st.dataframe(data)
+        if st.checkbox("Show Career Options"):
+            st.dataframe(data['Predicted_Career_Field'].value_counts().reset_index().rename(
+                columns={'index': 'Career', 'Predicted_Career_Field': 'Frequency'}))
         
-        st.subheader("Career Distribution")
-        fig, ax = plt.subplots(figsize=(10, 5))
-        data['Predicted_Career_Field'].value_counts().plot(kind='bar', ax=ax, color='skyblue')
-        ax.set_title("Most Common Careers in Dataset")
+        st.subheader("Popular Career Paths")
+        fig, ax = plt.subplots(figsize=(10, 6))
+        data['Predicted_Career_Field'].value_counts().head(15).plot(kind='barh', ax=ax, color='skyblue')
+        ax.set_title("Most Common Career Paths")
+        ax.set_xlabel("Frequency")
         st.pyplot(fig)
+        
+        st.subheader("Career Characteristics")
+        selected_career = st.selectbox(
+            "Select a career to learn more:",
+            sorted(data['Predicted_Career_Field'].unique())
+        )
+        
+        career_data = data[data['Predicted_Career_Field'] == selected_career].mean(numeric_only=True)
+        
+        if not career_data.empty:
+            st.write(f"**Typical profile for {selected_career}:**")
+            cols = st.columns(3)
+            with cols[0]:
+                st.metric("Average GPA", f"{career_data.get('GPA', 0):.1f}")
+            with cols[1]:
+                st.metric("Avg. Experience", f"{career_data.get('Years_of_Experience', 0):.1f} years")
+            with cols[2]:
+                st.metric("Common Interest", data[data['Predicted_Career_Field'] == selected_career]['Interest'].mode()[0])
 
 if __name__ == "__main__":
     main()
