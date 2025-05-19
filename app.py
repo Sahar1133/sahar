@@ -1,12 +1,13 @@
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-import streamlit as st
-from sklearn.tree import DecisionTreeClassifier, export_text
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import accuracy_score
-import random
+# ====================== IMPORTS ======================
+import matplotlib.pyplot as plt # For data visualization
+import pandas as pd # For data manipulation and analysis
+import numpy as np # For numerical operations
+import streamlit as st # For building the web app interface
+from sklearn.tree import DecisionTreeClassifier, export_text # Machine learning model
+from sklearn.model_selection import train_test_split # For splitting data into train/test sets
+from sklearn.preprocessing import LabelEncoder # For encoding categorical variables
+from sklearn.metrics import accuracy_score # For evaluating model performance
+import random # For randomizing questions
 
 # ====================== STYLING & SETUP ======================
 st.set_page_config(
