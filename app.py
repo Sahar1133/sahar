@@ -12,7 +12,7 @@ import random # For randomizing questions
 # ====================== STYLING & SETUP ======================
 # Configure the Streamlit page settings
 st.set_page_config(
-    page_title="Career Path Finder", # Browser tab title
+    page_title="AI Powered Career Prediction Based on Personality Traits", # Browser tab title
     page_icon="🧭", # Browser tab icon
     layout="wide", # Use wider page layout
     initial_sidebar_state="expanded" # Start with sidebar expanded
@@ -22,64 +22,167 @@ def apply_custom_css():
     """Applies custom CSS styling to the Streamlit app"""
     st.markdown("""
     <style>
-    /* Main background */
+    /* Main background with subtle gradient */
     .stApp {
-        background-color: #f8f9fa;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
     }
     
-    /* Button styling */
+    /* Card styling */
+    .stCard {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #e1e4e8;
+    }
+    
+    /* Button styling with animation */
     .stButton>button {
-        background: linear-gradient(135deg, #6e8efb, #4a6cf7);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         border: none;
-        border-radius: 8px;
-        padding: 10px 24px;
+        border-radius: 12px;
+        padding: 12px 28px;
         font-size: 16px;
-        transition: all 0.3s;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     .stButton>button:hover {
-        transform: scale(1.02);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
     }
     
-    /* Input fields */
+    /* Input fields with modern look */
     .stTextInput>div>div>input,
     .stNumberInput>div>div>input {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 10px;
-    }
-    
-    /* Radio buttons */
-    .stRadio>div {
-        flex-direction: column;
-        gap: 8px;
-    }
-    .stRadio>div>label {
-        background: #f1f3ff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
         padding: 12px;
-        border-radius: 8px;
-        transition: all 0.2s;
+        background: #f8fafc;
+        transition: all 0.3s;
     }
-    .stRadio>div>label:hover {
-        background: #e0e5ff;
+    .stTextInput>div>div>input:focus,
+    .stNumberInput>div>div>input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
     }
     
-    /* Headers */
+    /* Radio buttons with card-like appearance */
+    .stRadio > div {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .stRadio > div > label {
+        background: white;
+        padding: 16px;
+        border-radius: 10px;
+        transition: all 0.2s;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    .stRadio > div > label:hover {
+        border-color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+    }
+    .stRadio > div > label[data-baseweb="radio"]:first-child {
+        margin-top: 0;
+    }
+    
+    /* Headers with modern typography */
     h1 {
-        color: #2c3e50;
-        border-bottom: 2px solid #4a6cf7;
-        padding-bottom: 10px;
+        color: #2d3748;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+    h1:after {
+        content: "";
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 60px;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 2px;
     }
     h2 {
-        color: #3498db;
+        color: #4a5568;
+        font-weight: 600;
+        margin-top: 1.5rem;
+    }
+    h3 {
+        color: #4a5568;
+        font-weight: 500;
     }
     
-    /* Expanders */
+    /* Expanders with card styling */
     .stExpander {
         background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
+    }
+    .stExpander > summary {
+        font-weight: 600;
+        padding: 1rem 1.5rem;
+    }
+    
+    /* Tabs styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        padding: 12px 24px;
+        border-radius: 8px 8px 0 0;
+        transition: all 0.3s;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: white;
+        color: #667eea;
+        font-weight: 600;
+    }
+    .stTabs [aria-selected="false"] {
+        background-color: #f8fafc;
+        color: #4a5568;
+    }
+    
+    /* Sidebar styling */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+        color: white;
+    }
+    [data-testid="stSidebar"] .stRadio > div > label {
+        background: rgba(255,255,255,0.05);
+        color: white;
+        border-color: rgba(255,255,255,0.1);
+    }
+    [data-testid="stSidebar"] .stRadio > div > label:hover {
+        background: rgba(255,255,255,0.1);
+    }
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] p {
+        color: white !important;
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
     }
     </style>
     """, unsafe_allow_html=True)
