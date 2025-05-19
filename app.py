@@ -634,6 +634,8 @@ def main():
                         prediction = model.predict(input_data)
                         predicted_career = target_le.inverse_transform(prediction)[0]
 
+    
+
                         # Display results
                         st.success(f"### Your Best Career Match: **{predicted_career}**")
                         
