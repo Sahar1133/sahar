@@ -478,37 +478,32 @@ def main():
                         )
 
                         # Display results in a beautiful layout
-                        with st.container():
-                            st.markdown("""
-                            <div class="result-card">
-                                <h2 style="color: #2d3748; margin-bottom: 1.5rem;">Your Career Match</h2>
-                                <div class="prediction-highlight">
-                                    <h3 style="color: #2b6cb0; margin-top: 0;">{career}</h3>
-                                    <p>{paragraph}</p>
-                                </div>
-                                
-                                <h4 style="color: #4a5568; margin-top: 1.5rem;">Why This Career Fits You:</h4>
-                                <ul style="color: #4a5568;">
-                                    {summary_points}
-                                </ul>
-                                
-                                <h4 style="color: #4a5568; margin-top: 1.5rem;">Your Key Traits:</h4>
-                                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem;">
-                                    {traits_badges}
-                                </div>
-                                
-                                <h4 style="color: #4a5568; margin-top: 1.5rem;">Next Steps:</h4>
-                                <ul style="color: #4a5568;">
-                                    {suggestions_list}
-                                </ul>
-                            </div>
-                            """.format(
-                                career=predicted_career,
-                                paragraph=prediction_output["paragraph"],
-                                summary_points="\n".join([f"<li>{point}</li>" for point in prediction_output["summary"]]),
-                                traits_badges=" ".join([f'<span style="background: #ebf8ff; color: #2b6cb0; padding: 6px 12px; border-radius: 20px; font-size: 0.9rem;">{trait}</span>' for trait in prediction_output["traits"]]),
-                                suggestions_list="\n".join([f"<li>{suggestion}</li>" for suggestion in prediction_output["suggestions"]])
-                            ), unsafe_allow_html=True)
+                    # In the prediction display section, replace the string formatting with this corrected version:
+
+st.markdown(f"""
+<div class="result-card">
+    <h2 style="color: #2d3748; margin-bottom: 1.5rem;">Your Career Match</h2>
+    <div class="prediction-highlight">
+        <h3 style="color: #2b6cb0; margin-top: 0;">{predicted_career}</h3>
+        <p>{prediction_output["paragraph"]}</p>
+    </div>
+    
+    <h4 style="color: #4a5568; margin-top: 1.5rem;">Why This Career Fits You:</h4>
+    <ul style="color: #4a5568;">
+        {''.join([f'<li>{point}</li>' for point in prediction_output["summary"]])}
+    </ul>
+    
+    <h4 style="color: #4a5568; margin-top: 1.5rem;">Your Key Traits:</h4>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem;">
+        {''.join([f'<span style="background: #ebf8ff; color: #2b6cb0; padding: 6px 12px; border-radius: 20px; font-size: 0.9rem;">{trait}</span>' for trait in prediction_output["traits"]])}
+    </div>
+    
+    <h4 style="color: #4a5568; margin-top: 1.5rem;">Next Steps:</h4>
+    <ul style="color: #4a5568;">
+        {''.join([f'<li>{suggestion}</li>' for suggestion in prediction_output["suggestions"]])}
+    </ul>
+</div>
+""", unsafe_allow_html=True)
                             
                     except Exception as e:
                         st.error("We encountered an issue analyzing your profile. Please try again with different answers.")
@@ -543,24 +538,21 @@ def main():
             career_data = data[data['Predicted_Career_Field'] == selected_career]
             
             if not career_data.empty:
-# In the Career Explorer tab section, replace the career details display with this corrected version:
-
-with st.container():
-    # Calculate values first to avoid f-string complexity
-    avg_gpa = f"{career_data['GPA'].mean():.1f}" if 'GPA' in career_data.columns else 'N/A'
-    avg_exp = f"{career_data['Years_of_Experience'].mean():.1f}" if 'Years_of_Experience' in career_data.columns else 'N/A'
-    common_interest = career_data['Interest'].mode()[0] if 'Interest' in career_data.columns else 'N/A'
-    work_style = career_data['Work_Style'].mode()[0] if 'Work_Style' in career_data.columns else 'N/A'
-    strengths = career_data['Strengths'].mode()[0] if 'Strengths' in career_data.columns else 'N/A'
-    communication = career_data['Communication_Skills'].mode()[0] if 'Communication_Skills' in career_data.columns else 'N/A'
-
-    st.markdown(f"""
-    <div class="result-card">
-        <h3 style="color: #2d3748; margin-top: 0;">{selected_career} Profile</h3>
-        
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin: 1.5rem 0;">
-            <div style="background: #f8fafc; padding: 1rem; border-radius: 12px;">
-                <h4 style="color: #4a5568; margin-top: 0; margin-bottom: 0.5rem;">Average GPA</h4>
+            # In the Career Explorer tab section, replace the career details display with this corrected version:
+                with st.container():
+                    # Calculate values first to avoid f-string complexity
+                    avg_gpa = f"{career_data['GPA'].mean():.1f}" if 'GPA' in career_data.columns else 'N/A'
+                    avg_exp = f"{career_data['Years_of_Experience'].mean():.1f}" if 'Years_of_Experience' in career_data.columns else 'N/A'
+                    common_interest = career_data['Interest'].mode()[0] if 'Interest' in career_data.columns else 'N/A'
+                    work_style = career_data['Work_Style'].mode()[0] if 'Work_Style' in career_data.columns else 'N/A'
+                    strengths = career_data['Strengths'].mode()[0] if 'Strengths' in career_data.columns else 'N/A'
+                    communication = career_data['Communication_Skills'].mode()[0] if 'Communication_Skills' in career_data.columns else 'N/A'
+                    st.markdown(f"""
+                    <div class="result-card">
+                    <h3 style="color: #2d3748; margin-top: 0;">{selected_career} Profile</h3>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin: 1.5rem 0;">
+                    <div style="background: #f8fafc; padding: 1rem; border-radius: 12px;">
+                    <h4 style="color: #4a5568; margin-top: 0; margin-bottom: 0.5rem;">Average GPA</h4>
                 <p style="font-size: 1.5rem; font-weight: 600; color: #2b6cb0; margin: 0;">{avg_gpa}</p>
             </div>
             <div style="background: #f8fafc; padding: 1rem; border-radius: 12px;">
@@ -581,6 +573,7 @@ with st.container():
         </ul>
     </div>
     """, unsafe_allow_html=True)
+
             else:
                 st.warning("No detailed information available for this career path.")
         else:
