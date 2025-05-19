@@ -657,7 +657,7 @@ def main():
         st.session_state.questions = get_randomized_questions()
 
     # Set up page title and description
-    st.title("🧭 Career Path Finder")
+    st.title("🧭 AI Powered Career Prediction Based on Personality Traits")
     st.markdown("Discover careers that match your unique strengths and preferences.")
 
     # Sidebar information
