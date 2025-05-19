@@ -696,177 +696,152 @@ def main():
             selected_value = q["options"][[opt["text"] for opt in q["options"]].index(selected_option)]["value"]
             st.session_state.user_responses[q["feature"]] = selected_value
 
-        # Prediction button
-        if st.button("🔮 Find My Career Match"):
-            required_fields = list(direct_input_features.keys()) + ['Interest', 'Work_Style', 'Strengths']
-            filled_fields = [field for field in required_fields if field in st.session_state.user_responses]
-            
-            if len(filled_fields) < 3:
-                st.warning("Please answer at least 3 questions (including GPA and Experience) for better results.")
-            else:
-                with st.spinner("Analyzing your unique profile..."):
-                    input_data = processed_data.drop('Predicted_Career_Field', axis=1).iloc[0:1].copy()
-                    
-                    le_dict = {}
-                    for col in data.select_dtypes(include=['object']).columns:
-                        if col in data.columns and col != 'Predicted_Career_Field':
-                            le = LabelEncoder()
-                            le.fit(data[col].astype(str))
-                            le_dict[col] = le
-
-                    # Map user responses to model input format
-                    for col in input_data.columns:
-                        if col in st.session_state.user_responses:
-                            if col in ['Communication_Skills', 'Leadership_Skills', 'Teamwork_Skills']:
-                                level_map = {"Low": 0, "Medium": 1, "High": 2}
-                                input_data[col] = level_map.get(st.session_state.user_responses[col], 1)
-                                # Encode categorical features
-                            elif col in le_dict:
-                                try:
-                                    input_data[col] = le_dict[col].transform([st.session_state.user_responses[col]])[0]
-                                except ValueError:
-                                    input_data[col] = processed_data[col].mode()[0]
-                            else:
-                                # Direct numerical values
-                                input_data[col] = st.session_state.user_responses[col]
-                        else:
-                            input_data[col] = processed_data[col].median()
-                    
-                    try:
-                        # Make prediction
-                        prediction = model.predict(input_data)
-                        predicted_career = target_le.inverse_transform(prediction)[0]
-
+        # Add this helper function before the main() function
+def generate_career_insights(predicted_career, user_responses, top_features):
+    """Generate structured insights about the career prediction"""
+    # Career descriptions
+    career_descriptions = {
+        "Software Developer": "focused on creating and maintaining software applications",
+        "Data Scientist": "working with data to extract insights and build predictive models",
+        "AI Engineer": "developing artificial intelligence systems and machine learning models",
+        # Add descriptions for all other careers
+        "default": "that aligns well with your skills and personality"
+    }
     
-
-                        # Display results
-                        st.success(f"### Your Best Career Match: **{predicted_career}**")
-                        
-                        with st.expander("💡 Why this career matches you"):
-                            st.write("This career aligns well with your profile because of:")
-                            
-                            feat_importances = pd.Series(model.feature_importances_, index=input_data.columns)
-                            top_features = feat_importances.sort_values(ascending=False).head(3)
-                            
-                            for feat in top_features.index:
-                                importance_desc = ""
-                                if feat == "Interest":
-                                    interest_val = st.session_state.user_responses.get("Interest", "Various")
-                                    importance_desc = f"Your strong interest in {interest_val} fields"
-                                elif feat == "Work_Style":
-                                    style_val = st.session_state.user_responses.get("Work_Style", "Various")
-                                    importance_desc = f"Your preference for {style_val.lower()} work environments"
-                                elif feat == "Strengths":
-                                    strength_val = st.session_state.user_responses.get("Strengths", "Various")
-                                    importance_desc = f"Your {strength_val.lower()} strengths"
-                                elif feat == "GPA":
-                                    gpa_val = st.session_state.user_responses.get("GPA", 3.0)
-                                    importance_desc = f"Your academic performance (GPA: {gpa_val})"
-                                elif feat == "Years_of_Experience":
-                                    exp_val = st.session_state.user_responses.get("Years_of_Experience", 0)
-                                    importance_desc = f"Your professional experience ({exp_val} years)"
-                                else:
-                                    importance_desc = f"Your responses about {feat.replace('_', ' ').lower()}"
-                                
-                                st.write(f"- **{importance_desc}** (weight: {top_features[feat]:.2f})")
-                            
-                            st.write("\nThis career path typically requires these characteristics, which match well with your profile.")
-                        
-                        with st.expander("📚 Learn more about this career"):
-                            career_data = data[data['Predicted_Career_Field'] == predicted_career]
-                            if not career_data.empty:
-                                st.write(f"**Typical profile for {predicted_career}:**")
-                                cols = st.columns(3)
-                                with cols[0]:
-                                    if 'GPA' in career_data.columns and not career_data['GPA'].isnull().all():
-                                        st.metric("Average GPA", f"{career_data['GPA'].mean():.1f}")
-                                    else:
-                                        st.metric("Average GPA", "N/A")
-                                with cols[1]:
-                                    if 'Years_of_Experience' in career_data.columns:
-                                        st.metric("Avg. Experience", f"{career_data['Years_of_Experience'].mean():.1f} years")
-                                    else:
-                                        st.metric("Avg. Experience", "N/A")
-                                with cols[2]:
-                                    if 'Interest' in career_data.columns:
-                                        st.metric("Common Interest", career_data['Interest'].mode()[0])
-                                    else:
-                                        st.metric("Common Interest", "N/A")
-                                
-                                st.write("\n**Common characteristics:**")
-                                if 'Work_Style' in career_data.columns:
-                                    st.write(f"- Work Style: {career_data['Work_Style'].mode()[0]}")
-                                if 'Strengths' in career_data.columns:
-                                    st.write(f"- Strengths: {career_data['Strengths'].mode()[0]}")
-                                if 'Communication_Skills' in career_data.columns:
-                                    st.write(f"- Communication: {career_data['Communication_Skills'].mode()[0]}")
-                            else:
-                                st.write("No additional information available for this career in our dataset.")
-                        
-                    except Exception as e:
-                        st.error(f"We encountered an issue analyzing your profile. Please try again.")
+    # Generate the prediction paragraph
+    paragraph = f"""
+    Based on your assessment, you would excel as a **{predicted_career}**, \
+    {career_descriptions.get(predicted_career, career_descriptions['default'])}. \
+    Your unique combination of skills and preferences makes this an excellent match.
+    """
     
-    with tab2:
-        st.header("📊 Career Insights")
-        st.write("Explore different career paths and their characteristics.")
-        
-        if st.checkbox("Show Career Options"):
-            if 'Predicted_Career_Field' in data.columns:
-                st.dataframe(data['Predicted_Career_Field'].value_counts().reset_index().rename(
-                    columns={'index': 'Career', 'Predicted_Career_Field': 'Frequency'}))
-            else:
-                st.warning("Career field data not available.")
-        
-        st.subheader("Popular Career Paths")
-        if 'Predicted_Career_Field' in data.columns:
-            fig, ax = plt.subplots(figsize=(10, 6))
-            data['Predicted_Career_Field'].value_counts().head(15).plot(kind='barh', ax=ax, color='skyblue')
-            ax.set_title("Most Common Career Paths")
-            ax.set_xlabel("Frequency")
-            st.pyplot(fig)
+    # Generate summary points
+    summary = []
+    for feat in top_features.index:
+        if feat == "Interest":
+            interest = user_responses.get("Interest", "diverse")
+            summary.append(f"Your interest in {interest} fields matches this career path")
+        elif feat == "Work_Style":
+            style = user_responses.get("Work_Style", "working style")
+            summary.append(f"Your preference for {style.lower()} work environments fits well")
+        elif feat == "Strengths":
+            strength = user_responses.get("Strengths", "strengths")
+            summary.append(f"Your {strength.lower()} abilities are valuable in this field")
+        elif feat == "GPA":
+            gpa = user_responses.get("GPA", 3.0)
+            summary.append(f"Your academic performance (GPA: {gpa}) meets typical requirements")
+        elif feat == "Years_of_Experience":
+            exp = user_responses.get("Years_of_Experience", 0)
+            summary.append(f"Your {exp} years of experience provide a solid foundation")
         else:
-            st.warning("No career path data available.")
-        
-        st.subheader("Career Characteristics")
-        if 'Predicted_Career_Field' in data.columns:
-            selected_career = st.selectbox(
-                "Select a career to learn more:",
-                sorted(data['Predicted_Career_Field'].unique()),
-                key="career_select"
-            )
-            
-            career_data = data[data['Predicted_Career_Field'] == selected_career]
-            
-            if not career_data.empty:
-                st.write(f"**Typical profile for {selected_career}:**")
-                cols = st.columns(3)
-                with cols[0]:
-                    if 'GPA' in career_data.columns and not career_data['GPA'].isnull().all():
-                        st.metric("Average GPA", f"{career_data['GPA'].mean():.1f}")
-                    else:
-                        st.metric("Average GPA", "N/A")
-                with cols[1]:
-                    if 'Years_of_Experience' in career_data.columns:
-                        st.metric("Avg. Experience", f"{career_data['Years_of_Experience'].mean():.1f} years")
-                    else:
-                        st.metric("Avg. Experience", "N/A")
-                with cols[2]:
-                    if 'Interest' in career_data.columns:
-                        st.metric("Common Interest", career_data['Interest'].mode()[0])
-                    else:
-                        st.metric("Common Interest", "N/A")
+            summary.append(f"Your {feat.replace('_', ' ').lower()} aligns with this career")
+    
+    # Identify key traits
+    traits = []
+    if user_responses.get("Communication_Skills") == "High":
+        traits.append("Strong communicator")
+    if user_responses.get("Leadership_Skills") == "High":
+        traits.append("Leadership potential")
+    if user_responses.get("Teamwork_Skills") == "High":
+        traits.append("Team player")
+    if user_responses.get("GPA", 0) > 3.5:
+        traits.append("Academic achiever")
+    if user_responses.get("Years_of_Experience", 0) > 5:
+        traits.append("Experienced professional")
+    
+    # Generate suggestions
+    suggestions = [
+        f"Research educational requirements for {predicted_career} positions",
+        "Identify key skills to develop for this career path",
+        "Connect with professionals currently working in this field",
+        "Look for internships or entry-level positions to gain experience",
+        "Consider relevant certifications or additional training"
+    ]
+    
+    return {
+        "paragraph": paragraph,
+        "summary": summary,
+        "traits": traits,
+        "suggestions": suggestions
+    }
 
-                st.write("\n**Common characteristics:**")
-                if 'Work_Style' in career_data.columns:
-                    st.write(f"- Work Style: {career_data['Work_Style'].mode()[0]}")
-                if 'Strengths' in career_data.columns:
-                    st.write(f"- Strengths: {career_data['Strengths'].mode()[0]}")
-                if 'Communication_Skills' in career_data.columns:
-                    st.write(f"- Communication: {career_data['Communication_Skills'].mode()[0]}")
-            else:
-                st.warning("No data available for this career.")
-        else:
-            st.warning("No career data available for analysis.")
+# Then modify the prediction display section in the main() function:
+if st.button("🔮 Find My Career Match"):
+    # ... [previous code remains the same until after prediction is made]
+    
+    try:
+        # Make prediction
+        prediction = model.predict(input_data)
+        predicted_career = target_le.inverse_transform(prediction)[0]
+        feat_importances = pd.Series(model.feature_importances_, index=input_data.columns)
+        top_features = feat_importances.sort_values(ascending=False).head(3)
+        
+        # Generate insights
+        insights = generate_career_insights(predicted_career, st.session_state.user_responses, top_features)
+        
+        # Display results in a structured format
+        with st.container():
+            st.markdown(f"""
+            <div style="background: #f8fafc; padding: 2rem; border-radius: 12px; 
+                        border-left: 5px solid #4a90e2; margin-bottom: 2rem;">
+                <h2 style="color: #2d3748; margin-top: 0;">Your Career Match: {predicted_career}</h2>
+                <p style="font-size: 1.1rem;">{insights['paragraph']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Why this career fits you
+            with st.expander("🔍 Why this career matches your profile", expanded=True):
+                st.markdown("""
+                <div style="background: white; padding: 1.5rem; border-radius: 8px;">
+                    <ul style="margin-top: 0;">
+                """ + "\n".join([f"<li>{point}</li>" for point in insights['summary']]) + """
+                    </ul>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Feature importance visualization
+                fig, ax = plt.subplots(figsize=(8, 4))
+                top_features.sort_values().plot(kind='barh', color='#4a90e2', ax=ax)
+                ax.set_title('Key Factors in Your Career Match')
+                ax.set_xlabel('Importance Score')
+                st.pyplot(fig)
+            
+            # Your key traits
+            if insights['traits']:
+                st.subheader("🌟 Your Key Traits")
+                cols = st.columns(4)
+                for i, trait in enumerate(insights['traits']:
+                    cols[i % 4].markdown(f"""
+                    <div style="background: #ebf8ff; color: #2b6cb0; 
+                                padding: 0.5rem 1rem; border-radius: 20px; 
+                                text-align: center; margin-bottom: 0.5rem;">
+                        {trait}
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            # Next steps
+            st.subheader("🚀 Next Steps to Pursue This Career")
+            for i, suggestion in enumerate(insights['suggestions'], 1):
+                st.markdown(f"""
+                <div style="display: flex; align-items: flex-start; margin-bottom: 0.5rem;">
+                    <div style="background: #2b6cb0; color: white; width: 24px; height: 24px; 
+                                border-radius: 50%; display: flex; align-items: center; 
+                                justify-content: center; margin-right: 0.5rem; flex-shrink: 0;">
+                        {i}
+                    </div>
+                    <div style="flex-grow: 1;">
+                        {suggestion}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+        # Keep the existing "Learn more about this career" expander
+        with st.expander("📚 Learn more about this career"):
+            # ... [keep the existing career details code]
+    
+    except Exception as e:
+        st.error(f"We encountered an issue analyzing your profile. Please try again.")
+        st.error(str(e))
 
 if __name__ == "__main__":
     main()
