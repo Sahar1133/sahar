@@ -10,14 +10,16 @@ from sklearn.metrics import accuracy_score # For evaluating model performance
 import random # For randomizing questions
 
 # ====================== STYLING & SETUP ======================
+# Configure the Streamlit page settings
 st.set_page_config(
-    page_title="Career Path Finder",
-    page_icon="🧭",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="Career Path Finder", # Browser tab title
+    page_icon="🧭", # Browser tab icon
+    layout="wide", # Use wider page layout
+    initial_sidebar_state="expanded" # Start with sidebar expanded
 )
 
 def apply_custom_css():
+    """Applies custom CSS styling to the Streamlit app"""
     st.markdown("""
     <style>
     /* Main background */
@@ -83,9 +85,10 @@ def apply_custom_css():
     """, unsafe_allow_html=True)
 
 # ====================== DATA LOADING & PREPROCESSING ======================
-@st.cache_data
+@st.cache_data # Cache the data to avoid reloading on every interaction
 def load_data():
     career_options = [
+        # List of potential career options
         'Software Developer', 'Data Scientist', 'AI Engineer', 
         'Cybersecurity Specialist', 'Cloud Architect',
         'Marketing Manager', 'Financial Analyst', 'HR Manager',
@@ -108,10 +111,13 @@ def load_data():
     ]
     
     try:
+        # Try to load real dataset
         data = pd.read_excel("new_updated_data.xlsx")
+        # If career field data is sparse, generate random career assignments
         if len(data['Predicted_Career_Field'].unique()) < 20:
             data['Predicted_Career_Field'] = np.random.choice(career_options, size=len(data))
     except FileNotFoundError:
+        # Fallback to demo data if real dataset not found
         st.warning("⚠️ Dataset not found. Using demo data.")
         data = pd.DataFrame({
             'Interest': np.random.choice(['Technology', 'Business', 'Arts', 'Engineering', 'Medical', 'Science', 'Education', 'Law'], 200),
@@ -124,7 +130,7 @@ def load_data():
             'Years_of_Experience': np.random.randint(0, 20, 200),
             'Predicted_Career_Field': np.random.choice(career_options, 200)
         })
-    
+    # Clean GPA data if it exists
     if 'GPA' in data.columns:
         data['GPA'] = pd.to_numeric(data['GPA'], errors='coerce')
         data['GPA'].fillna(data['GPA'].median(), inplace=True)
@@ -136,37 +142,43 @@ data = load_data()
 # ====================== MODEL TRAINING ======================
 def preprocess_data(data):
     le = LabelEncoder()
+    # Identify categorical columns (excluding the target)
     object_cols = [col for col in data.select_dtypes(include=['object']).columns 
                   if col in data.columns]
-    
+    # Encode each categorical column
     for col in object_cols:
         if col != 'Predicted_Career_Field':
             data[col] = le.fit_transform(data[col].astype(str))
-    
+    # Encode the target variable (career field)
     if 'Predicted_Career_Field' in data.columns:
         data['Predicted_Career_Field'] = le.fit_transform(data['Predicted_Career_Field'])
-    return data, le
-
+    return data, le # Return processed data and the target encoder
+# Process the data
 processed_data, target_le = preprocess_data(data.copy())
 
+# ====================== MODEL TRAINING ======================
 def train_model(data):
     if 'Predicted_Career_Field' not in data.columns:
         st.error("Target column not found in data")
         return None, 0
-    
+    # Prepare features (X) and target (y)
     X = data.drop('Predicted_Career_Field', axis=1)
     y = data['Predicted_Career_Field']
     
+    # Split data into training and test sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
+    # Initialize and train the decision tree model
     model = DecisionTreeClassifier(criterion='entropy', max_depth=5, random_state=42)
     model.fit(X_train, y_train)
     
+    # Evaluate model accuracy
     y_pred = model.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
     
     return model, accuracy
-
+    
+# Train the model
 model, accuracy = train_model(processed_data)
 
 # ====================== QUESTIONNAIRE ======================
@@ -540,20 +552,25 @@ def main():
         st.session_state.user_responses = {}
     if 'questions' not in st.session_state:
         st.session_state.questions = get_randomized_questions()
-    
+
+    # Set up page title and description
     st.title("🧭 Career Path Finder")
     st.markdown("Discover careers that match your unique strengths and preferences.")
-    
+
+    # Sidebar information
     st.sidebar.title("About This Tool")
     st.sidebar.info("This assessment helps match your profile with suitable career options.")
     st.sidebar.write(f"*Based on analysis of {len(data)} career paths*")
-    
+
+    # Create two tabs for different functionalities
     tab1, tab2 = st.tabs(["Take Assessment", "Career Insights"])
-    
+
+    # Assessment Tab
     with tab1:
         st.header("Career Compatibility Assessment")
         st.write("Answer these questions to discover careers that fit your profile.")
-        
+
+        # Background information section
         with st.expander("Your Background"):
             for feature, config in direct_input_features.items():
                 st.session_state.user_responses[feature] = st.number_input(
@@ -564,7 +581,8 @@ def main():
                     step=config["step"],
                     key=f"num_{feature}"
                 )
-        
+
+        # Display randomized questions
         st.subheader("Personality and Preferences")
         for i, q in enumerate(st.session_state.questions):
             selected_option = st.radio(
@@ -574,7 +592,8 @@ def main():
             )
             selected_value = q["options"][[opt["text"] for opt in q["options"]].index(selected_option)]["value"]
             st.session_state.user_responses[q["feature"]] = selected_value
-        
+
+        # Prediction button
         if st.button("🔮 Find My Career Match"):
             required_fields = list(direct_input_features.keys()) + ['Interest', 'Work_Style', 'Strengths']
             filled_fields = [field for field in required_fields if field in st.session_state.user_responses]
@@ -591,26 +610,31 @@ def main():
                             le = LabelEncoder()
                             le.fit(data[col].astype(str))
                             le_dict[col] = le
-                    
+
+                    # Map user responses to model input format
                     for col in input_data.columns:
                         if col in st.session_state.user_responses:
                             if col in ['Communication_Skills', 'Leadership_Skills', 'Teamwork_Skills']:
                                 level_map = {"Low": 0, "Medium": 1, "High": 2}
                                 input_data[col] = level_map.get(st.session_state.user_responses[col], 1)
+                                # Encode categorical features
                             elif col in le_dict:
                                 try:
                                     input_data[col] = le_dict[col].transform([st.session_state.user_responses[col]])[0]
                                 except ValueError:
                                     input_data[col] = processed_data[col].mode()[0]
                             else:
+                                # Direct numerical values
                                 input_data[col] = st.session_state.user_responses[col]
                         else:
                             input_data[col] = processed_data[col].median()
                     
                     try:
+                        # Make prediction
                         prediction = model.predict(input_data)
                         predicted_career = target_le.inverse_transform(prediction)[0]
-                        
+
+                        # Display results
                         st.success(f"### Your Best Career Match: **{predicted_career}**")
                         
                         with st.expander("💡 Why this career matches you"):
