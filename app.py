@@ -769,77 +769,80 @@ def generate_career_insights(predicted_career, user_responses, top_features):
 if st.button("🔮 Find My Career Match"):
     # ... [previous code remains the same until after prediction is made]
     
-    try:
-        # Make prediction
-        prediction = model.predict(input_data)
-        predicted_career = target_le.inverse_transform(prediction)[0]
-        feat_importances = pd.Series(model.feature_importances_, index=input_data.columns)
-        top_features = feat_importances.sort_values(ascending=False).head(3)
-        
-        # Generate insights
-        insights = generate_career_insights(predicted_career, st.session_state.user_responses, top_features)
-        
-        # Display results in a structured format
-        with st.container():
-            st.markdown(f"""
-            <div style="background: #f8fafc; padding: 2rem; border-radius: 12px; 
-                        border-left: 5px solid #4a90e2; margin-bottom: 2rem;">
-                <h2 style="color: #2d3748; margin-top: 0;">Your Career Match: {predicted_career}</h2>
-                <p style="font-size: 1.1rem;">{insights['paragraph']}</p>
-            </div>
-            """, unsafe_allow_html=True)
+            try:
+            # Make prediction
+            prediction = model.predict(input_data)
+            predicted_career = target_le.inverse_transform(prediction)[0]
+            feat_importances = pd.Series(model.feature_importances_, index=input_data.columns)
+            top_features = feat_importances.sort_values(ascending=False).head(3)
             
-            # Why this career fits you
-            with st.expander("🔍 Why this career matches your profile", expanded=True):
-                st.markdown("""
-                <div style="background: white; padding: 1.5rem; border-radius: 8px;">
-                    <ul style="margin-top: 0;">
-                """ + "\n".join([f"<li>{point}</li>" for point in insights['summary']]) + """
-                    </ul>
+            # Generate insights
+            insights = generate_career_insights(predicted_career, st.session_state.user_responses, top_features)
+            
+            # Display results in a structured format
+            with st.container():
+                st.markdown(f"""
+                <div style="background: #f8fafc; padding: 2rem; border-radius: 12px; 
+                            border-left: 5px solid #4a90e2; margin-bottom: 2rem;">
+                    <h2 style="color: #2d3748; margin-top: 0;">Your Career Match: {predicted_career}</h2>
+                    <p style="font-size: 1.1rem;">{insights['paragraph']}</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Feature importance visualization
-                fig, ax = plt.subplots(figsize=(8, 4))
-                top_features.sort_values().plot(kind='barh', color='#4a90e2', ax=ax)
-                ax.set_title('Key Factors in Your Career Match')
-                ax.set_xlabel('Importance Score')
-                st.pyplot(fig)
-            
-            # Your key traits
-            if insights['traits']:
-                st.subheader("🌟 Your Key Traits")
-                cols = st.columns(4)
-                for i, trait in enumerate(insights['traits']):
-                    cols[i % 4].markdown(f"""
-                    <div style="background: #ebf8ff; color: #2b6cb0; 
-                                padding: 0.5rem 1rem; border-radius: 20px; 
-                                text-align: center; margin-bottom: 0.5rem;">
-                        {trait}
+                # Why this career fits you
+                with st.expander("🔍 Why this career matches your profile", expanded=True):
+                    st.markdown("""
+                    <div style="background: white; padding: 1.5rem; border-radius: 8px;">
+                        <ul style="margin-top: 0;">
+                    """ + "\n".join([f"<li>{point}</li>" for point in insights['summary']]) + """
+                        </ul>
                     </div>
                     """, unsafe_allow_html=True)
-            
-            # Next steps
-            st.subheader("🚀 Next Steps to Pursue This Career")
-            for i, suggestion in enumerate(insights['suggestions'], 1):
-                st.markdown(f"""
-                <div style="display: flex; align-items: flex-start; margin-bottom: 0.5rem;">
-                    <div style="background: #2b6cb0; color: white; width: 24px; height: 24px; 
-                                border-radius: 50%; display: flex; align-items: center; 
-                                justify-content: center; margin-right: 0.5rem; flex-shrink: 0;">
-                        {i}
-                    </div>
-                    <div style="flex-grow: 1;">
-                        {suggestion}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                    
+                    # Feature importance visualization
+                    fig, ax = plt.subplots(figsize=(8, 4))
+                    top_features.sort_values().plot(kind='barh', color='#4a90e2', ax=ax)
+                    ax.set_title('Key Factors in Your Career Match')
+                    ax.set_xlabel('Importance Score')
+                    st.pyplot(fig)
                 
-        # Keep the existing "Learn more about this career" expander
-        with st.expander("📚 Learn more about this career"):
-           except Exception as e:
-               st.error(f"We encountered an issue analyzing your profile. Please try again.")
-               st.error(str(e))
+                # Your key traits
+                if insights['traits']:
+                    st.subheader("🌟 Your Key Traits")
+                    cols = st.columns(4)
+                    for i, trait in enumerate(insights['traits']):
+                        cols[i % 4].markdown(f"""
+                        <div style="background: #ebf8ff; color: #2b6cb0; 
+                                    padding: 0.5rem 1rem; border-radius: 20px; 
+                                    text-align: center; margin-bottom: 0.5rem;">
+                            {trait}
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                # Next steps
+                st.subheader("🚀 Next Steps to Pursue This Career")
+                for i, suggestion in enumerate(insights['suggestions'], 1):
+                    st.markdown(f"""
+                    <div style="display: flex; align-items: flex-start; margin-bottom: 0.5rem;">
+                        <div style="background: #2b6cb0; color: white; width: 24px; height: 24px; 
+                                    border-radius: 50%; display: flex; align-items: center; 
+                                    justify-content: center; margin-right: 0.5rem; flex-shrink: 0;">
+                            {i}
+                        </div>
+                        <div style="flex-grow: 1;">
+                            {suggestion}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+            # Keep the existing "Learn more about this career" expander
+            with st.expander("📚 Learn more about this career"):
+                # Your existing career details code here
+                pass
+
+        except Exception as e:
+            st.error(f"We encountered an issue analyzing your profile. Please try again.")
+            st.error(str(e))
 
 if __name__ == "__main__":
     main()
