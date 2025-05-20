@@ -625,7 +625,7 @@ def get_randomized_questions():
 
     # Only sample if we have remaining questions and need more
     if needed > 0 and remaining:
-        selected.extend(random.sample(remaining, min(needed, len(remaining)))
+        selected.extend(random.sample(remaining, min(needed, len(remaining))))
 
     random.shuffle(selected)
     return selected
