@@ -837,8 +837,6 @@ if st.button("🔮 Find My Career Match"):
                 
         # Keep the existing "Learn more about this career" expander
         with st.expander("📚 Learn more about this career"):
-            # ... [keep the existing career details code]
-    
         except Exception as e:
             st.error(f"We encountered an issue analyzing your profile. Please try again.")
             st.error(str(e))
