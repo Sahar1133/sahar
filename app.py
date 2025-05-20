@@ -1,21 +1,21 @@
 # ====================== IMPORTS ======================
-import matplotlib.pyplot as plt # For data visualization
-import pandas as pd # For data manipulation and analysis
-import numpy as np # For numerical operations
-import streamlit as st # For building the web app interface
-from sklearn.tree import DecisionTreeClassifier, export_text # Machine learning model
-from sklearn.model_selection import train_test_split # For splitting data into train/test sets
-from sklearn.preprocessing import LabelEncoder # For encoding categorical variables
-from sklearn.metrics import accuracy_score # For evaluating model performance
-import random # For randomizing questions
+import matplotlib.pyplot as plt  # For data visualization
+import pandas as pd  # For data manipulation and analysis
+import numpy as np  # For numerical operations
+import streamlit as st  # For building the web app interface
+from sklearn.tree import DecisionTreeClassifier, export_text  # Machine learning model
+from sklearn.model_selection import train_test_split  # For splitting data into train/test sets
+from sklearn.preprocessing import LabelEncoder  # For encoding categorical variables
+from sklearn.metrics import accuracy_score  # For evaluating model performance
+import random  # For randomizing questions
 
 # ====================== STYLING & SETUP ======================
 # Configure the Streamlit page settings
 st.set_page_config(
-    page_title="AI Powered Career Prediction Based on Personality Traits", # Browser tab title
-    page_icon="🧭", # Browser tab icon
-    layout="wide", # Use wider page layout
-    initial_sidebar_state="expanded" # Start with sidebar expanded
+    page_title="AI Powered Career Prediction Based on Personality Traits",  # Browser tab title
+    page_icon="🧭",  # Browser tab icon
+    layout="wide",  # Use wider page layout
+    initial_sidebar_state="expanded"  # Start with sidebar expanded
 )
 
 def apply_custom_css():
@@ -188,10 +188,11 @@ def apply_custom_css():
     """, unsafe_allow_html=True)
 
 # ====================== DATA LOADING & PREPROCESSING ======================
-@st.cache_data # Cache the data to avoid reloading on every interaction
+@st.cache_data  # Cache the data to avoid reloading on every interaction
 def load_data():
+    """Loads and preprocesses the career prediction dataset"""
     career_options = [
-        # List of potential career options
+        # Comprehensive list of potential career options
         'Software Developer', 'Data Scientist', 'AI Engineer', 
         'Cybersecurity Specialist', 'Cloud Architect',
         'Marketing Manager', 'Financial Analyst', 'HR Manager',
@@ -244,6 +245,7 @@ data = load_data()
 
 # ====================== MODEL TRAINING ======================
 def preprocess_data(data):
+    """Preprocesses the data by encoding categorical variables"""
     le = LabelEncoder()
     # Identify categorical columns (excluding the target)
     object_cols = [col for col in data.select_dtypes(include=['object']).columns 
@@ -255,12 +257,13 @@ def preprocess_data(data):
     # Encode the target variable (career field)
     if 'Predicted_Career_Field' in data.columns:
         data['Predicted_Career_Field'] = le.fit_transform(data['Predicted_Career_Field'])
-    return data, le # Return processed data and the target encoder
+    return data, le  # Return processed data and the target encoder
+
 # Process the data
 processed_data, target_le = preprocess_data(data.copy())
 
-# ====================== MODEL TRAINING ======================
 def train_model(data):
+    """Trains a decision tree classifier on the processed data"""
     if 'Predicted_Career_Field' not in data.columns:
         st.error("Target column not found in data")
         return None, 0
@@ -603,7 +606,7 @@ def get_all_questions():
     ]
 
 def get_randomized_questions():
-    """Selects 10 random questions from the pool of 30."""
+    """Selects 10 random questions from the pool of 30, ensuring diversity"""
     all_questions = get_all_questions()
     features = list(set(q['feature'] for q in all_questions))
     selected = []
@@ -622,7 +625,7 @@ def get_randomized_questions():
 
     # Only sample if we have remaining questions and need more
     if needed > 0 and remaining:
-        selected.extend(random.sample(remaining, min(needed, len(remaining))))
+        selected.extend(random.sample(remaining, min(needed, len(remaining)))
 
     random.shuffle(selected)
     return selected
@@ -646,59 +649,8 @@ direct_input_features = {
     }
 }
 
-# ====================== STREAMLIT APP ======================
-def main():
-    apply_custom_css()
-    
-    # Initialize session state
-    if 'user_responses' not in st.session_state:
-        st.session_state.user_responses = {}
-    if 'questions' not in st.session_state:
-        st.session_state.questions = get_randomized_questions()
-
-    # Set up page title and description
-    st.title("🧭 AI Powered Career Prediction Based on Personality Traits")
-    st.markdown("Discover careers that match your unique strengths and preferences.")
-
-    # Sidebar information
-    st.sidebar.title("About This Tool")
-    st.sidebar.info("This assessment helps match your profile with suitable career options.")
-    st.sidebar.write(f"*Based on analysis of {len(data)} career paths*")
-
-    # Create two tabs for different functionalities
-    tab1, tab2 = st.tabs(["Take Assessment", "Career Insights"])
-
-    # Assessment Tab
-    with tab1:
-        st.header("Career Compatibility Assessment")
-        st.write("Answer these questions to discover careers that fit your profile.")
-
-        # Background information section
-        with st.expander("Your Background"):
-            for feature, config in direct_input_features.items():
-                st.session_state.user_responses[feature] = st.number_input(
-                    config["question"],
-                    min_value=config["min"],
-                    max_value=config["max"],
-                    value=config["default"],
-                    step=config["step"],
-                    key=f"num_{feature}"
-                )
-
-        # Display randomized questions
-        st.subheader("Personality and Preferences")
-        for i, q in enumerate(st.session_state.questions):
-            selected_option = st.radio(
-                q["question"],
-                [opt["text"] for opt in q["options"]],
-                key=f"q_{i}"
-            )
-            selected_value = q["options"][[opt["text"] for opt in q["options"]].index(selected_option)]["value"]
-            st.session_state.user_responses[q["feature"]] = selected_value
-
-        # Add this helper function before the main() function
 def generate_career_insights(predicted_career, user_responses, top_features):
-    """Generate structured insights about the career prediction"""
+    """Generates detailed insights about the predicted career match"""
     # Career descriptions
     career_descriptions = {
         "Software Developer": "focused on creating and maintaining software applications",
@@ -765,84 +717,153 @@ def generate_career_insights(predicted_career, user_responses, top_features):
         "suggestions": suggestions
     }
 
-# Then modify the prediction display section in the main() function:
-if st.button("🔮 Find My Career Match"):
-    # ... [previous code remains the same until after prediction is made]
+# ====================== STREAMLIT APP ======================
+def main():
+    apply_custom_css()
     
+    # Initialize session state
+    if 'user_responses' not in st.session_state:
+        st.session_state.user_responses = {}
+    if 'questions' not in st.session_state:
+        st.session_state.questions = get_randomized_questions()
+
+    # Set up page title and description
+    st.title("🧭 AI Powered Career Prediction Based on Personality Traits")
+    st.markdown("Discover careers that match your unique strengths and preferences.")
+
+    # Sidebar information
+    st.sidebar.title("About This Tool")
+    st.sidebar.info("This assessment helps match your profile with suitable career options.")
+    st.sidebar.write(f"*Based on analysis of {len(data)} career paths*")
+
+    # Create two tabs for different functionalities
+    tab1, tab2 = st.tabs(["Take Assessment", "Career Insights"])
+
+    # Assessment Tab
+    with tab1:
+        st.header("Career Compatibility Assessment")
+        st.write("Answer these questions to discover careers that fit your profile.")
+
+        # Background information section
+        with st.expander("Your Background"):
+            for feature, config in direct_input_features.items():
+                st.session_state.user_responses[feature] = st.number_input(
+                    config["question"],
+                    min_value=config["min"],
+                    max_value=config["max"],
+                    value=config["default"],
+                    step=config["step"],
+                    key=f"num_{feature}"
+                )
+
+        # Display randomized questions
+        st.subheader("Personality and Preferences")
+        for i, q in enumerate(st.session_state.questions):
+            selected_option = st.radio(
+                q["question"],
+                [opt["text"] for opt in q["options"]],
+                key=f"q_{i}"
+            )
+            selected_value = q["options"][[opt["text"] for opt in q["options"]].index(selected_option)]["value"]
+            st.session_state.user_responses[q["feature"]] = selected_value
+
+        # Prediction and results section
+        if st.button("🔮 Find My Career Match"):
             try:
-            # Make prediction
-            prediction = model.predict(input_data)
-            predicted_career = target_le.inverse_transform(prediction)[0]
-            feat_importances = pd.Series(model.feature_importances_, index=input_data.columns)
-            top_features = feat_importances.sort_values(ascending=False).head(3)
-            
-            # Generate insights
-            insights = generate_career_insights(predicted_career, st.session_state.user_responses, top_features)
-            
-            # Display results in a structured format
-            with st.container():
-                st.markdown(f"""
-                <div style="background: #f8fafc; padding: 2rem; border-radius: 12px; 
-                            border-left: 5px solid #4a90e2; margin-bottom: 2rem;">
-                    <h2 style="color: #2d3748; margin-top: 0;">Your Career Match: {predicted_career}</h2>
-                    <p style="font-size: 1.1rem;">{insights['paragraph']}</p>
-                </div>
-                """, unsafe_allow_html=True)
+                # Prepare input data for prediction
+                input_data = pd.DataFrame([st.session_state.user_responses])
                 
-                # Why this career fits you
-                with st.expander("🔍 Why this career matches your profile", expanded=True):
-                    st.markdown("""
-                    <div style="background: white; padding: 1.5rem; border-radius: 8px;">
-                        <ul style="margin-top: 0;">
-                    """ + "\n".join([f"<li>{point}</li>" for point in insights['summary']]) + """
-                        </ul>
+                # Convert categorical features using LabelEncoder
+                processed_input = input_data.copy()
+                for col in processed_data.columns:
+                    if col in input_data.columns and col != 'Predicted_Career_Field':
+                        le = LabelEncoder()
+                        le.fit(processed_data[col])
+                        processed_input[col] = le.transform(input_data[col])
+
+                # Make prediction
+                prediction = model.predict(processed_input)
+                predicted_career = target_le.inverse_transform(prediction)[0]
+                
+                # Get feature importances
+                feat_importances = pd.Series(model.feature_importances_, 
+                                           index=processed_input.columns)
+                top_features = feat_importances.sort_values(ascending=False).head(3)
+
+                # Generate insights
+                insights = generate_career_insights(predicted_career, 
+                                                  st.session_state.user_responses, 
+                                                  top_features)
+
+                # Display results in a structured format
+                with st.container():
+                    st.markdown(f"""
+                    <div style="background: #f8fafc; padding: 2rem; border-radius: 12px; 
+                                border-left: 5px solid #4a90e2; margin-bottom: 2rem;">
+                        <h2 style="color: #2d3748; margin-top: 0;">Your Career Match: {predicted_career}</h2>
+                        <p style="font-size: 1.1rem;">{insights['paragraph']}</p>
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # Feature importance visualization
-                    fig, ax = plt.subplots(figsize=(8, 4))
-                    top_features.sort_values().plot(kind='barh', color='#4a90e2', ax=ax)
-                    ax.set_title('Key Factors in Your Career Match')
-                    ax.set_xlabel('Importance Score')
-                    st.pyplot(fig)
-                
-                # Your key traits
-                if insights['traits']:
-                    st.subheader("🌟 Your Key Traits")
-                    cols = st.columns(4)
-                    for i, trait in enumerate(insights['traits']):
-                        cols[i % 4].markdown(f"""
-                        <div style="background: #ebf8ff; color: #2b6cb0; 
-                                    padding: 0.5rem 1rem; border-radius: 20px; 
-                                    text-align: center; margin-bottom: 0.5rem;">
-                            {trait}
+                    # Why this career fits you
+                    with st.expander("🔍 Why this career matches your profile", expanded=True):
+                        st.markdown("""
+                        <div style="background: white; padding: 1.5rem; border-radius: 8px;">
+                            <ul style="margin-top: 0;">
+                        """ + "\n".join([f"<li>{point}</li>" for point in insights['summary']]) + """
+                            </ul>
                         </div>
                         """, unsafe_allow_html=True)
-                
-                # Next steps
-                st.subheader("🚀 Next Steps to Pursue This Career")
-                for i, suggestion in enumerate(insights['suggestions'], 1):
-                    st.markdown(f"""
-                    <div style="display: flex; align-items: flex-start; margin-bottom: 0.5rem;">
-                        <div style="background: #2b6cb0; color: white; width: 24px; height: 24px; 
-                                    border-radius: 50%; display: flex; align-items: center; 
-                                    justify-content: center; margin-right: 0.5rem; flex-shrink: 0;">
-                            {i}
-                        </div>
-                        <div style="flex-grow: 1;">
-                            {suggestion}
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                        
+                        # Feature importance visualization
+                        fig, ax = plt.subplots(figsize=(8, 4))
+                        top_features.sort_values().plot(kind='barh', color='#4a90e2', ax=ax)
+                        ax.set_title('Key Factors in Your Career Match')
+                        ax.set_xlabel('Importance Score')
+                        st.pyplot(fig)
                     
-            # Keep the existing "Learn more about this career" expander
-            with st.expander("📚 Learn more about this career"):
-                # Your existing career details code here
-                pass
+                    # Your key traits
+                    if insights['traits']:
+                        st.subheader("🌟 Your Key Traits")
+                        cols = st.columns(4)
+                        for i, trait in enumerate(insights['traits']):
+                            cols[i % 4].markdown(f"""
+                            <div style="background: #ebf8ff; color: #2b6cb0; 
+                                        padding: 0.5rem 1rem; border-radius: 20px; 
+                                        text-align: center; margin-bottom: 0.5rem;">
+                                {trait}
+                            </div>
+                            """, unsafe_allow_html=True)
+                    
+                    # Next steps
+                    st.subheader("🚀 Next Steps to Pursue This Career")
+                    for i, suggestion in enumerate(insights['suggestions'], 1):
+                        st.markdown(f"""
+                        <div style="display: flex; align-items: flex-start; margin-bottom: 0.5rem;">
+                            <div style="background: #2b6cb0; color: white; width: 24px; height: 24px; 
+                                        border-radius: 50%; display: flex; align-items: center; 
+                                        justify-content: center; margin-right: 0.5rem; flex-shrink: 0;">
+                                {i}
+                            </div>
+                            <div style="flex-grow: 1;">
+                                {suggestion}
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                # Career details expander
+                with st.expander("📚 Learn more about this career"):
+                    st.write(f"## {predicted_career} Career Overview")
+                    st.write("**Typical Responsibilities:**")
+                    st.write("- Develop and maintain software systems")
+                    st.write("- Collaborate with cross-functional teams")
+                    st.write("- Implement new features and improvements")
+                    st.write("\n**Average Salary Range:** $80,000 - $120,000")
+                    st.write("\n**Required Education:** Bachelor's degree in Computer Science or related field")
 
-        except Exception as e:
-            st.error(f"We encountered an issue analyzing your profile. Please try again.")
-            st.error(str(e))
+            except Exception as e:
+                st.error(f"We encountered an issue analyzing your profile. Please try again.")
+                st.error(str(e))
 
 if __name__ == "__main__":
     main()
