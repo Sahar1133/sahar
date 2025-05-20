@@ -810,7 +810,7 @@ if st.button("🔮 Find My Career Match"):
             if insights['traits']:
                 st.subheader("🌟 Your Key Traits")
                 cols = st.columns(4)
-                  for i, trait in enumerate(insights['traits']):
+                for i, trait in enumerate(insights['traits']):
                     cols[i % 4].markdown(f"""
                     <div style="background: #ebf8ff; color: #2b6cb0; 
                                 padding: 0.5rem 1rem; border-radius: 20px; 
